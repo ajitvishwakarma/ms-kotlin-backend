@@ -29,6 +29,57 @@ This project is a hands-on Kotlin microservices workspace designed for Java deve
    ```
 4. Configuration is managed via the `microservices-config-server` folder.
 
+## 🐳 Complete Docker Environment
+
+The project provides a complete Docker Compose setup with all infrastructure and microservices.
+
+### Services Included:
+- **Infrastructure**: Zookeeper, Kafka, Kafka UI, HashiCorp Vault
+- **Databases**: MongoDB (Product Service), MySQL (Order Service)  
+- **Microservices**: Configuration Server, Discovery Server, Product Service, Order Service
+
+### Quick Start:
+```bash
+# Start complete environment
+docker-compose up -d
+
+# Check all services are running
+docker-compose ps
+
+# View logs of specific service
+docker-compose logs -f ms-kotlin-product-service
+
+# Stop all services
+docker-compose down
+```
+
+### Database Setup:
+- **MongoDB**: `ms-kotlin-mongodb:27017` with sample product data
+- **MySQL**: `ms-kotlin-mysql:3306` with sample order data
+- Databases auto-initialize with sample data via `init-scripts/`
+
+### Service Ports:
+- **Configuration Server**: 8888
+- **Discovery Server**: 8761  
+- **Product Service**: 8082 (MongoDB)
+- **Order Service**: 8083 (MySQL)
+- **Kafka UI**: 8090
+- **Vault UI**: 8200
+- **MongoDB**: 27017
+- **MySQL**: 3306
+
+### Environment Variables:
+Services use Docker container hostnames with fallback to localhost for local development:
+```properties
+# Product Service MongoDB
+MONGODB_HOST=ms-kotlin-mongodb
+MONGODB_DATABASE=product-service
+
+# Order Service MySQL  
+MYSQL_HOST=ms-kotlin-mysql
+MYSQL_DATABASE=order-service
+```
+
 ## Interview & Learning Resources
 
 - See [`Kotlin-Java-Interview-Notes.md`](./product-service/Kotlin-Java-Interview-Notes.md) for:

@@ -12,6 +12,8 @@ This document tracks all port allocations across the microservices project to pr
 | **Kafka** | ms-kotlin-kafka | 29092 | 29092 | Message broker (internal) |
 | **Kafka UI** | ms-kotlin-kafka-ui | 8090 | 8080 | Kafka monitoring dashboard |
 | **Vault** | ms-kotlin-vault | 8200 | 8200 | Secrets management |
+| **MongoDB** | ms-kotlin-mongodb | 27017 | 27017 | Product Service database |
+| **MySQL** | ms-kotlin-mysql | 3306 | 3306 | Order Service database |
 
 ### Core Microservices
 | Service | Container Name | Host Port | Container Port | Purpose |
