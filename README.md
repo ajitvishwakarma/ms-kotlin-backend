@@ -51,6 +51,22 @@ This project is a hands-on Kotlin microservices workspace designed for Java deve
 | Property Injection   | `@field:Value("\${test.name}") val name: String` | `@Value("${test.name}") private String name;` |
 | Required Annotation  | `@field:Value` (use-site target)               | `@Value` (no use-site target needed)          |
 
+## Spring Cloud Config Setup (Spring Boot 2.4+ and 3.x)
+
+- To ensure your service loads configuration from the config server, add the following to your `application.properties`:
+  ```
+  spring.config.import=optional:configserver:
+  ```
+- You do **not** need a `bootstrap.properties` or the `spring-cloud-starter-bootstrap` dependency for most modern setups. Only use them if you require legacy bootstrap context (rare for new projects).
+- Make sure you have the following dependency in your `build.gradle`:
+  ```groovy
+  implementation 'org.springframework.cloud:spring-cloud-starter-config'
+  ```
+- For `/actuator/refresh` endpoint, also add:
+  ```groovy
+  implementation 'org.springframework.cloud:spring-cloud-starter-actuator'
+  ```
+
 ## License
 
 This project is for educational and interview preparation purposes.
