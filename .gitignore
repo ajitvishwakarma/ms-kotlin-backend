@@ -60,3 +60,18 @@
 *.backup
 temp/
 cache/
+
+# Redundant Windows files
+**/*.backup
+**/*.bak
+**/*.tmp
+**/build-cache/**
+!**/build-cache/gc.properties
+
+# Windows batch files (use .sh equivalents)
+start-environment.bat
+stop-environment.bat
+start-vault.bat
+load-secrets.bat
+start-kafka.bat
+test-bus-refresh.bat
