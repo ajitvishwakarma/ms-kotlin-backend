@@ -448,7 +448,63 @@ Unsatisfied dependency expressed through constructor parameter 0: No qualifying 
 - Use `@Value` on constructor parameters for immutable (`val`) properties.
 - Use `@field:Value` only for mutable (`var`) properties (field/property injection).
 
-### 2. /actuator/refresh Endpoint Not Found (404)
+### 2. Constructor vs Field Injection: When to Use Which?
+
+**Decision Matrix:**
+
+| Scenario | Recommended Approach | Reasoning |
+|----------|---------------------|-----------|
+| Regular Spring Beans | Constructor Injection | Immutability, testability, fail-fast |
+| `@RefreshScope` Beans | Field Injection | Constructor runs only once, fields can be re-injected |
+| Configuration Properties | Constructor (usually) | Properties rarely change after startup |
+| Dynamic Properties | Field Injection | May need to change during runtime |
+| Testing | Constructor Injection | Easy to mock/stub dependencies |
+| Circular Dependencies | Field/Setter Injection | Constructor injection prevents circular deps |
+
+**RefreshScope Example:**
+
+❌ **Problematic (Constructor Injection with @RefreshScope):**
+```kotlin
+@RestController
+@RefreshScope  // Doesn't work reliably with constructor injection
+class TestController(@Value("\${server.message}") private val serverMessage: String) {
+    
+    @GetMapping("/test")
+    fun test(): String = "Message: $serverMessage"
+}
+```
+
+✅ **Correct (Field Injection with @RefreshScope):**
+```kotlin
+@RestController
+@RefreshScope
+class TestController {
+    
+    @Value("\${server.message}")
+    private lateinit var serverMessage: String
+    
+    @GetMapping("/test")
+    fun test(): String = "Message: $serverMessage"
+}
+```
+
+**Why RefreshScope Requires Field Injection:**
+- `@RefreshScope` creates a proxy that intercepts method calls
+- Constructor is called only once when the bean is created
+- Properties injected via constructor cannot be "refreshed" 
+- Field injection allows Spring to re-inject values when configuration changes
+
+**Best Practice Guidelines:**
+
+1. **Default to Constructor Injection** for regular beans
+2. **Use Field Injection** only when needed:
+   - `@RefreshScope` beans
+   - Circular dependency resolution
+   - Late initialization requirements
+3. **Use `lateinit var`** for field-injected non-nullable properties
+4. **Document why** field injection was chosen over constructor injection
+
+### 3. /actuator/refresh Endpoint Not Found (404)
 **Error:**
 ```
 {"status":404,"error":"Not Found","message":"No static resource actuator/refresh.", ...}
@@ -461,7 +517,7 @@ Unsatisfied dependency expressed through constructor parameter 0: No qualifying 
 - Ensure `management.endpoints.web.exposure.include=refresh,health,info` is set in your properties.
 - Use a POST request to `/actuator/refresh` on the correct service port.
 
-### 3. Spring Cloud Vault Authentication Error
+### 4. Spring Cloud Vault Authentication Error
 **Error:**
 ```
 Cannot create authentication mechanism for TOKEN. This method requires either a Token (spring.cloud.vault.token) or a token file at ~/.vault-token.
@@ -487,5 +543,46 @@ spring.cloud.vault.kv.default-context=product-service
 - **Bootstrap vs Application context**: Bootstrap loads external config, Application receives config from external sources
 - **Loading order matters**: Vault connection must be established before Spring tries to load properties from Vault
 - **Common mistake**: Putting external config source setup in `application.properties` instead of `bootstrap.properties`
+
+### 5. Spring Cloud Bus Configuration Refresh (✅ PARTIALLY WORKING)
+
+**Status**: Spring Cloud Bus messaging infrastructure is **working correctly**. Kafka events are sent/received properly, but @RefreshScope property binding needs further investigation.
+
+**What Works:**
+- ✅ Spring Cloud Bus event distribution via Kafka
+- ✅ Configuration server serving updated values
+- ✅ Event processing and acknowledgments
+- ✅ Service-to-service messaging infrastructure
+
+**Current Issue:**
+- ❌ `@RefreshScope` + `@ConfigurationProperties` not refreshing actual property values
+- ❌ `/actuator/refresh` returns `[]` (no keys refreshed)
+
+**Confirmed Working Configuration:**
+```kotlin
+@Component
+@ConfigurationProperties(prefix = "test")
+@RefreshScope
+data class TestProperties(
+    var name: String = "default"
+)
+
+@RestController
+@EnableConfigurationProperties(TestProperties::class)
+class TestController(@Autowired private val testProperties: TestProperties)
+```
+
+**Log Evidence (Spring Cloud Bus Working):**
+```
+Sending remote event on bus: [RefreshRemoteApplicationEvent]
+Received remote refresh request.
+Using kafka topic for outbound: springCloudBus
+Keys refreshed [config.client.version]  // ← Bus works, property binding doesn't
+```
+
+**TODO for Future Investigation:**
+- Property source priority and caching
+- Alternative refresh approaches (ConfigurationProperties vs @Value)
+- Spring Boot 3.x + Spring Cloud 2025.x refresh behavior changes
 
 ---

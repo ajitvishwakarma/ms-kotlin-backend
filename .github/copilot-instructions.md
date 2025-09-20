@@ -42,6 +42,38 @@ When adding new features (API Gateway, fallback, logging, Vault, etc.), update t
 
 ---
 
+## Development & Testing Workflow
+
+**ALWAYS Follow This Order:**
+1. **Analyze First**: Check existing code, understand current implementation
+2. **Plan & Discuss**: Propose approach, ask for clarification if needed  
+3. **Implement**: Make only the requested changes
+4. **Test & Verify**: Let user test everything first before committing
+5. **Commit Only After Verification**: Never commit untested changes
+
+**Before Adding New Code:**
+- **Search for existing implementations** using grep_search, file_search, or semantic_search
+- **Check what's already there** - don't duplicate functionality
+- **Ask before assuming** - if you think something might be useful, offer it as a suggestion
+- **Read existing controllers, services, configs** to understand patterns
+
+**Testing Protocol:**
+- User tests functionality first
+- Fix any issues found during testing
+- Only commit after user confirms everything works
+- Never commit "untested" or "assumed working" code
+
+**Code Changes:**
+- Make minimal, focused changes that address the specific request
+- Don't add extra features unless explicitly asked
+- If you see opportunities for improvement, suggest them separately
+- Respect existing code patterns and conventions
+- **NEVER implement solutions proactively** - always ask first
+- **STOP and ASK** before creating additional files, features, or "improvements"
+- Only do exactly what is requested, nothing more
+
+---
+
 ## Git Commit Best Practices
 
 **Logical Grouping:**

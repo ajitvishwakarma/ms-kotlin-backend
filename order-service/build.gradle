@@ -41,6 +41,9 @@ dependencies {
     // Enables bootstrap context for config and restores /actuator/refresh endpoint in Spring Cloud 2025.x+ (see troubleshooting guide for details)
     // In Spring Boot 3.5 + Spring Cloud 2025, /actuator/refresh is not available by default; this dependency restores legacy local refresh behavior.
     // ⚠️ Removed: spring-cloud-starter → this is a BOM aggregator, redundant when you use specific starters
+    
+    // --- Spring Cloud Bus (Distributed Configuration Refresh) ---
+    implementation 'org.springframework.cloud:spring-cloud-starter-bus-kafka'   // Spring Cloud Bus with Kafka for distributed refresh
 
     // --- Kotlin + Jackson ---
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'        // JSON <-> Kotlin data classes

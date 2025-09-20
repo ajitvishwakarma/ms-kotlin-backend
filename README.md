@@ -104,6 +104,53 @@ implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap' // Req
 
 For detailed troubleshooting and configuration examples, see `TROUBLESHOOTING.md`.
 
+## Spring Cloud Bus with Kafka - Distributed Configuration Refresh
+
+**Problem:** In Spring Cloud 2025.x, `/actuator/refresh` only refreshes individual service instances, requiring manual refresh of each service.
+
+**Solution:** Spring Cloud Bus + Kafka enables distributed configuration refresh across all microservices with a single API call.
+
+### Quick Start
+```bash
+# 1. Start Kafka infrastructure
+cd kafka-docker
+./start-kafka.sh  # Linux/macOS
+# or start-kafka.bat  # Windows
+
+# 2. Start your microservices (they auto-connect to Kafka)
+
+# 3. Test distributed refresh
+curl -X POST http://localhost:8082/actuator/busrefresh
+```
+
+### Key Benefits
+- **Single API Call:** One `/actuator/busrefresh` updates ALL service instances
+- **Scalable:** Works with unlimited service instances 
+- **Reliable:** Message-driven with delivery guarantees via Kafka
+- **Monitorable:** Track refresh events via Kafka UI at http://localhost:8090
+
+### Configuration
+Services automatically include Spring Cloud Bus via:
+```groovy
+implementation 'org.springframework.cloud:spring-cloud-starter-bus-kafka'
+```
+
+Bootstrap configuration (both services):
+```properties
+spring.cloud.bus.enabled=true
+spring.kafka.bootstrap-servers=localhost:9092
+```
+
+### Testing
+Use provided test scripts to verify end-to-end functionality:
+```bash
+cd kafka-docker
+./test-bus-refresh.sh    # Linux/macOS
+# or test-bus-refresh.bat # Windows
+```
+
+For complete setup, testing, and troubleshooting details, see [`kafka-docker/README.md`](./kafka-docker/README.md).
+
 ## License
 
 This project is for educational and interview preparation purposes.
