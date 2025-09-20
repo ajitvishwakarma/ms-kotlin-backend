@@ -51,21 +51,29 @@ This project is a hands-on Kotlin microservices workspace designed for Java deve
 | Property Injection   | `@field:Value("\${test.name}") val name: String` | `@Value("${test.name}") private String name;` |
 | Required Annotation  | `@field:Value` (use-site target)               | `@Value` (no use-site target needed)          |
 
-## Spring Cloud Config Setup (Spring Boot 2.4+ and 3.x)
 
-- To ensure your service loads configuration from the config server, add the following to your `application.properties`:
+
+## Spring Cloud Config & Actuator Refresh Setup (Spring Boot 3.5+ and Spring Cloud 2025.x)
+
+- To load configuration from the config server, add to your `application.properties`:
   ```
   spring.config.import=optional:configserver:
   ```
-- You do **not** need a `bootstrap.properties` or the `spring-cloud-starter-bootstrap` dependency for most modern setups. Only use them if you require legacy bootstrap context (rare for new projects).
-- Make sure you have the following dependency in your `build.gradle`:
+- Add to your `build.gradle`:
   ```groovy
   implementation 'org.springframework.cloud:spring-cloud-starter-config'
+  implementation 'org.springframework.boot:spring-boot-starter-actuator'
+  implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap' // Needed for /actuator/refresh in Spring Cloud 2025.x+
   ```
-- For `/actuator/refresh` endpoint, also add:
-  ```groovy
-  implementation 'org.springframework.cloud:spring-cloud-starter-actuator'
+- Expose endpoints in `application.properties`:
   ```
+  management.endpoints.web.exposure.include=*
+  ```
+
+**Note:**
+- In Spring Cloud 2025.x, `/actuator/refresh` is not available by default. You must add `spring-cloud-starter-bootstrap` to restore the legacy local refresh endpoint. For distributed refresh, use Spring Cloud Bus and `/actuator/busrefresh`.
+- See the TROUBLESHOOTING.md for detailed explanation, rationale, and troubleshooting steps if `/actuator/refresh` does not work as expected.
+- **Known Issue:** Even with proper configuration, `/actuator/refresh` may still not work in Spring Cloud 2025.x + Spring Boot 3.5. Use application restart as workaround until resolved.
 
 ## License
 
