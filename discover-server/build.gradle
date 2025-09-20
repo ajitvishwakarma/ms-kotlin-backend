@@ -24,11 +24,16 @@ ext {
 }
 
 dependencies {
-	implementation 'org.jetbrains.kotlin:kotlin-reflect'
-	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-server'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	// --- Spring Cloud ---
+	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-server' // Eureka server
+
+	// --- Kotlin ---
+	implementation 'org.jetbrains.kotlin:kotlin-reflect'                       // Required for Spring + Kotlin runtime
+
+	// --- Testing ---
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'     // JUnit, Mockito, AssertJ, etc.
+	testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'               // Kotlin + JUnit 5 support
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'               // Test launcher
 }
 
 dependencyManagement {

@@ -30,18 +30,32 @@ ext {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
-    implementation 'org.jetbrains.kotlin:kotlin-reflect'
-    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
-    implementation 'org.springframework.cloud:spring-cloud-starter-config'
-    implementation 'org.springframework.cloud:spring-cloud-starter'
-    compileOnly 'org.projectlombok:lombok'
-    runtimeOnly 'com.mysql:mysql-connector-j'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // --- Core Spring Boot Starters ---
+    implementation 'org.springframework.boot:spring-boot-starter-web'          // REST API + embedded Tomcat
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'     // Monitoring + actuator endpoints
+
+    // --- Spring Cloud ---
+    implementation 'org.springframework.cloud:spring-cloud-starter-config'     // Config Server client
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client' // Service discovery client
+    implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap'  // Enables bootstrap context for config and restores /actuator/refresh endpoint in Spring Cloud 2025.x+ (see troubleshooting guide for details)
+    // In Spring Boot 3.5 + Spring Cloud 2025, /actuator/refresh is not available by default; this dependency restores legacy local refresh behavior.
+    // ⚠️ Removed: spring-cloud-starter → this is a BOM aggregator, redundant when you use specific starters
+
+    // --- Kotlin + Jackson ---
+    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'        // JSON <-> Kotlin data classes
+    implementation 'org.jetbrains.kotlin:kotlin-reflect'                       // Required for Spring + Kotlin runtime
+
+    // --- Lombok ---
+    compileOnly 'org.projectlombok:lombok'             // Compile-time only
+    annotationProcessor 'org.projectlombok:lombok'     // Annotation processor
+
+    // --- MySQL Driver ---
+    runtimeOnly 'com.mysql:mysql-connector-j'           // MySQL JDBC driver
+
+    // --- Testing ---
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'     // JUnit, Mockito, AssertJ, etc.
+    testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'               // Kotlin + JUnit 5 support
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'               // Test launcher
 }
 
 dependencyManagement {
