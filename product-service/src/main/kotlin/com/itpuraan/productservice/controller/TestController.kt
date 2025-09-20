@@ -11,7 +11,7 @@ class TestController(
     // In Kotlin, use @field:Value to specify the annotation applies to the backing field,
     // not just the constructor parameter.
     // This avoids warnings and ensures Spring injects the value correctly.
-    @field:Value("\${test.name}") private val name: String
+    @Value("\${test.name}") private val name: String
 ) {
     @GetMapping
     fun test(): String {

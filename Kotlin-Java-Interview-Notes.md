@@ -164,6 +164,22 @@ class TestController(
 ```
 
 **Java:**
+
+```java
+
+@RestController
+@RequestMapping("/api/test")
+public class TestController {
+    @Value("${test.name}")
+    private String name;
+
+    @GetMapping
+    public String test() {
+        return name;
+    }
+}
+```
+
 ---
 
 ## Kotlin Constructor Parameter Declarations: val, var, private, and Best Practices
@@ -194,40 +210,43 @@ private?**
 | Private property                   | `private val name: String`  | `private final String name;` |
 | Constructor arg only (not a field) | `name: String` (no val/var) | Constructor parameter only   |
 
-
 ---
 
 ## Kotlin: Private Properties in Constructors vs Class-Level Private
 
-**Q: Are private properties in the constructor accessible from outside the class? What is the difference between class private and constructor private?**
+**Q: Are private properties in the constructor accessible from outside the class? What is the difference between class
+private and constructor private?**
 
 ### Explanation
 
-- If you declare a constructor parameter as `private val name: String`, it becomes a private property: only accessible inside the class, not from outside (just like `private` fields in Java).
+- If you declare a constructor parameter as `private val name: String`, it becomes a private property: only accessible
+  inside the class, not from outside (just like `private` fields in Java).
 - If you declare a property as `val name: String` (no `private`), it is public by default and accessible from outside.
 - `private` on a constructor parameter only affects the property, not the constructor itself.
-- You can also make the entire constructor private using `private constructor(...)`, which restricts instantiation of the class from outside (useful for singletons, factories, etc.).
+- You can also make the entire constructor private using `private constructor(...)`, which restricts instantiation of
+  the class from outside (useful for singletons, factories, etc.).
 
 ### Example Table
 
-| Declaration                              | Kotlin Example                                      | Java Equivalent                        |
-|------------------------------------------|-----------------------------------------------------|----------------------------------------|
-| Private property in constructor          | `class C(private val name: String)`                 | `private final String name;`           |
-| Public property in constructor           | `class C(val name: String)`                         | `public final String name;`            |
-| Private constructor (class-level)        | `class C private constructor(name: String)`         | `private C(String name) { ... }`       |
-| Private property + private constructor   | `class C private constructor(private val name: String)` | `private final String name; private C(String name) { ... }` |
+| Declaration                            | Kotlin Example                                          | Java Equivalent                                             |
+|----------------------------------------|---------------------------------------------------------|-------------------------------------------------------------|
+| Private property in constructor        | `class C(private val name: String)`                     | `private final String name;`                                |
+| Public property in constructor         | `class C(val name: String)`                             | `public final String name;`                                 |
+| Private constructor (class-level)      | `class C private constructor(name: String)`             | `private C(String name) { ... }`                            |
+| Private property + private constructor | `class C private constructor(private val name: String)` | `private final String name; private C(String name) { ... }` |
 
 ### Example
 
 ```kotlin
 class Example1(private val name: String) {
-  fun printName() = println(name) // OK
+    fun printName() = println(name) // OK
 }
 
 val e = Example1("foo")
 // e.name // ERROR: 'name' is private in 'Example1'
 
 class Example2(val name: String)
+
 val e2 = Example2("bar")
 println(e2.name) // OK: public
 
@@ -236,6 +255,7 @@ class Example3 private constructor(val name: String)
 ```
 
 **Summary:**
+
 - `private val`/`var` in constructor: property is private, not accessible from outside.
 - `private constructor`: restricts class instantiation from outside.
 - Both can be combined for fine-grained control, similar to Java.
@@ -279,6 +299,83 @@ public class TestController {
 
 - In Kotlin, always use `@field:Value` for property/constructor injection to avoid warnings and ensure correct behavior.
 - This is a Kotlin language feature, not a Spring limitation.
+
+---
+
+## Spring @Value Injection in Kotlin: Constructor Parameter vs Field/Property
+
+**Q: Why does using `@field:Value` on a constructor parameter in Kotlin cause an error, but using `@Value` works?**
+
+### Short Answer
+
+- Use `@Value` on constructor parameters for immutable (`val`) properties in Kotlin. This tells Spring to inject the
+  value from properties/config server.
+- Using `@field:Value` on a constructor parameter does **not** work for constructor injection. Spring will try to
+  autowire a bean of type `String` from the application context, not from properties/config, causing an error.
+- Use `@field:Value` only for mutable (`var`) properties (field/property injection).
+
+### Table: When to Use Which
+
+| Injection Style          | Kotlin Syntax Example                            | Use for |
+|--------------------------|--------------------------------------------------|---------|
+| Constructor Injection    | `@Value("\${test.name}") val name: String`       | `val`   |
+| Field/Property Injection | `@field:Value("\${test.name}") var name: String` | `var`   |
+
+### Example
+
+```kotlin
+// Correct: Constructor injection (for val)
+class TestController(@Value("\${test.name}") private val name: String)
+
+// Correct: Field/property injection (for var)
+class TestController {
+    @field:Value("\${test.name}")
+    lateinit var name: String
+}
+```
+
+### Why the Error?
+
+- If you use `@field:Value` on a constructor parameter, Spring does **not** see @Value on the parameter, so it tries to
+  inject a bean of type String from the context (not from properties/config). This bean does not exist, so you get an
+  error.
+
+### Error Example
+
+If you use `@field:Value` on a constructor parameter, you may see this error:
+
+```
+Error creating bean with name 'testController':
+Unsatisfied dependency expressed through constructor parameter 0: No qualifying bean of type 'java.lang.String' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
+```
+
+**What does this mean?**
+
+- Spring is trying to inject a bean of type String from the application context (not from properties/config), because it
+  does not see @Value on the constructor parameter.
+- This happens because `@field:Value` only annotates the field, not the constructor parameter.
+
+---
+
+### Java Comparison
+
+```java
+// Java: Field injection
+@Value("${test.name}")
+private String name;
+
+// Java: Constructor injection
+private final String name;
+
+public TestController(@Value("${test.name}") String name) {
+    this.name = name;
+}
+```
+
+**Key Takeaway:**
+
+- Use `@Value` for constructor parameters (`val`), `@field:Value` for mutable fields (`var`).
+- If you see "No qualifying bean of type 'String'", check your annotation placement!
 
 ---
 
