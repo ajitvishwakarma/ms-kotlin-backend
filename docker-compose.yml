@@ -101,6 +101,56 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # MongoDB for Product Service
+  ms-kotlin-mongodb:
+    image: mongo:7.0
+    container_name: ms-kotlin-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: ""
+      MONGO_INITDB_DATABASE: product-service
+      DOCKER_HOST: tcp://host.docker.internal:2375
+    ports:
+      - "27017:27017"
+    networks:
+      - ms-kotlin-microservices-network
+    # WSL-specific Docker socket mounting and data persistence
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ms-kotlin-mongodb-data:/data/db
+      - ./init-scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MySQL for Order Service
+  ms-kotlin-mysql:
+    image: mysql:8.0
+    container_name: ms-kotlin-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ""
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: order-service
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ""
+      DOCKER_HOST: tcp://host.docker.internal:2375
+    ports:
+      - "3306:3306"
+    networks:
+      - ms-kotlin-microservices-network
+    # WSL-specific Docker socket mounting and data persistence
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ms-kotlin-mysql-data:/var/lib/mysql
+      - ./init-scripts/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
       start_period: 10s
 
   # ===========================================
@@ -185,6 +235,8 @@ services:
         condition: service_healthy
       ms-kotlin-kafka:
         condition: service_healthy
+      ms-kotlin-mongodb:
+        condition: service_healthy
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_CLOUD_CONFIG_URI=http://ms-kotlin-configuration-server:8888
@@ -192,6 +244,12 @@ services:
       - SPRING_CLOUD_VAULT_HOST=ms-kotlin-vault
       - SPRING_CLOUD_VAULT_PORT=8200
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=ms-kotlin-kafka:29092
+      - MONGODB_HOST=ms-kotlin-mongodb
+      - MONGODB_PORT=27017
+      - MONGODB_DATABASE=product-service
+      - MONGODB_USERNAME=root
+      - MONGODB_PASSWORD=""
+      - MONGODB_AUTH_DB=admin
       - DOCKER_HOST=tcp://host.docker.internal:2375
     ports:
       - "8082:8082"
@@ -223,6 +281,8 @@ services:
         condition: service_healthy
       ms-kotlin-kafka:
         condition: service_healthy
+      ms-kotlin-mysql:
+        condition: service_healthy
       ms-kotlin-product-service:
         condition: service_healthy
     environment:
@@ -232,6 +292,11 @@ services:
       - SPRING_CLOUD_VAULT_HOST=ms-kotlin-vault
       - SPRING_CLOUD_VAULT_PORT=8200
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=ms-kotlin-kafka:29092
+      - MYSQL_HOST=ms-kotlin-mysql
+      - MYSQL_PORT=3306
+      - MYSQL_DATABASE=order-service
+      - MYSQL_USERNAME=root
+      - MYSQL_PASSWORD=""
       - DOCKER_HOST=tcp://host.docker.internal:2375
     ports:
       - "8083:8083"
@@ -247,3 +312,12 @@ services:
       retries: 5
       start_period: 90s
     restart: unless-stopped
+
+# ===========================================
+# PERSISTENT VOLUMES
+# ===========================================
+volumes:
+  ms-kotlin-mongodb-data:
+    driver: local
+  ms-kotlin-mysql-data:
+    driver: local
