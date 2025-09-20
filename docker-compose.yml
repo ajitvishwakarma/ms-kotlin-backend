@@ -1,5 +1,3 @@
-version: '3.8'
-
 networks:
   ms-kotlin-microservices-network:
     driver: bridge
@@ -112,7 +110,7 @@ services:
       MONGO_INITDB_DATABASE: product-service
       DOCKER_HOST: tcp://host.docker.internal:2375
     ports:
-      - "27017:27017"
+      - "27018:27017"
     networks:
       - ms-kotlin-microservices-network
     # WSL-specific Docker socket mounting and data persistence
@@ -138,7 +136,7 @@ services:
       MYSQL_PASSWORD: ""
       DOCKER_HOST: tcp://host.docker.internal:2375
     ports:
-      - "3306:3306"
+      - "3307:3306"
     networks:
       - ms-kotlin-microservices-network
     # WSL-specific Docker socket mounting and data persistence
