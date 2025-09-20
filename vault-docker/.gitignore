@@ -6,3 +6,6 @@ vault-docker/data/
 
 # Docker Compose override files
 vault-docker/docker-compose.override.yml
+
+# Don't commit actual secrets (these are just examples)
+secrets/*.json

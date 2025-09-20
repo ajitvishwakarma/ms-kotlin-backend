@@ -16,7 +16,7 @@ if curl -s http://localhost:8200/v1/sys/health > /dev/null; then
     echo "🔑 Vault Access Information:"
     echo "   Vault URL: http://localhost:8200"
     echo "   Root Token: myroot"
-    echo "   Vault UI: http://localhost:8000 (optional)"
+    echo "   Vault UI: http://localhost:9000 (optional)"
     echo ""
     echo "📖 Next Steps:"
     echo "   1. Access Vault UI at http://localhost:8200"
