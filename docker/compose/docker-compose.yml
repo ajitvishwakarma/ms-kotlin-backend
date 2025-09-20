@@ -1,0 +1,343 @@
+networks:
+  ms-kotlin-microservices-network:
+    driver: bridge
+
+services:
+  # ===========================================
+  # INFRASTRUCTURE SERVICES (Start First)
+  # ===========================================
+  
+  # Zookeeper for Kafka
+  ms-kotlin-zookeeper:
+    image: zookeeper:3.6
+    container_name: ms-kotlin-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      DOCKER_HOST: tcp://host.docker.internal:2375
+    ports:
+      - "2181:2181"
+    networks:
+      - ms-kotlin-microservices-network
+    # WSL-specific Docker socket mounting
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Kafka Message Broker
+  ms-kotlin-kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: ms-kotlin-kafka
+    depends_on:
+      ms-kotlin-zookeeper:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: ms-kotlin-zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://ms-kotlin-kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      DOCKER_HOST: tcp://host.docker.internal:2375
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    networks:
+      - ms-kotlin-microservices-network
+    # WSL-specific Docker socket mounting
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # Kafka UI for monitoring
+  ms-kotlin-kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: ms-kotlin-kafka-ui
+    depends_on:
+      ms-kotlin-kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: ms-kotlin-kafka:29092
+      DOCKER_HOST: tcp://host.docker.internal:2375
+    ports:
+      - "8090:8080"
+    networks:
+      - ms-kotlin-microservices-network
+    # WSL-specific Docker socket mounting
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  # HashiCorp Vault for secrets management
+  ms-kotlin-vault:
+    image: hashicorp/vault:latest
+    container_name: ms-kotlin-vault
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: myroot
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+      DOCKER_HOST: tcp://host.docker.internal:2375
+    ports:
+      - "8200:8200"
+    networks:
+      - ms-kotlin-microservices-network
+    # WSL-specific Docker socket mounting
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "sh", "-c", "VAULT_ADDR=http://localhost:8200 vault status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MongoDB for Product Service
+  ms-kotlin-mongodb:
+    image: mongo:7.0
+    container_name: ms-kotlin-mongodb
+    environment:
+      MONGO_INITDB_DATABASE: product-service
+      DOCKER_HOST: tcp://host.docker.internal:2375
+    ports:
+      - "27018:27017"
+    networks:
+      - ms-kotlin-microservices-network
+    # WSL-specific Docker socket mounting and data persistence
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ms-kotlin-mongodb-data:/data/db
+      - ./init-scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MySQL for Order Service
+  ms-kotlin-mysql:
+    image: mysql:8.0
+    container_name: ms-kotlin-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ""
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: order-service
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ""
+      DOCKER_HOST: tcp://host.docker.internal:2375
+    ports:
+      - "3307:3306"
+    networks:
+      - ms-kotlin-microservices-network
+    # WSL-specific Docker socket mounting and data persistence
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ms-kotlin-mysql-data:/var/lib/mysql
+      - ./init-scripts/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ===========================================
+  # CORE MICROSERVICES (Start in Order)
+  # ===========================================
+
+  # Configuration Server (Must start first among microservices)
+  ms-kotlin-configuration-server:
+    build:
+      context: ./configuration-server
+      dockerfile: Dockerfile
+      # Build optimizations
+      cache_from:
+        - gradle:8.14.3-jdk17
+        - openjdk:17-jdk-alpine
+      args:
+        - GRADLE_OPTS=-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true
+    container_name: ms-kotlin-configuration-server
+    depends_on:
+      ms-kotlin-vault:
+        condition: service_healthy
+      ms-kotlin-kafka:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=https://github.com/ajitvishwakarma/ms-kotlin-backend
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_SEARCH_PATHS=microservices-config-server
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_DEFAULT_LABEL=main
+      - DOCKER_HOST=tcp://host.docker.internal:2375
+    ports:
+      - "8888:8888"
+    networks:
+      - ms-kotlin-microservices-network
+    # WSL-specific Docker socket mounting
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    restart: unless-stopped
+
+  # Service Discovery Server
+  ms-kotlin-discover-server:
+    build:
+      context: ./discover-server
+      dockerfile: Dockerfile
+      # Build optimizations
+      cache_from:
+        - gradle:8.14.3-jdk17
+        - openjdk:17-jdk-alpine
+      args:
+        - GRADLE_OPTS=-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true
+    container_name: ms-kotlin-discover-server
+    depends_on:
+      ms-kotlin-configuration-server:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DOCKER_HOST=tcp://host.docker.internal:2375
+    ports:
+      - "8761:8761"
+    networks:
+      - ms-kotlin-microservices-network
+    # WSL-specific Docker socket mounting
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+
+  # ===========================================
+  # BUSINESS MICROSERVICES
+  # ===========================================
+
+  # Product Service
+  ms-kotlin-product-service:
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+      # Build optimizations
+      cache_from:
+        - gradle:8.14.3-jdk17
+        - openjdk:17-jdk-alpine
+      args:
+        - GRADLE_OPTS=-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true
+    container_name: ms-kotlin-product-service
+    depends_on:
+      ms-kotlin-configuration-server:
+        condition: service_healthy
+      ms-kotlin-discover-server:
+        condition: service_healthy
+      ms-kotlin-vault:
+        condition: service_healthy
+      ms-kotlin-kafka:
+        condition: service_healthy
+      ms-kotlin-mongodb:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_CONFIG_URI=http://ms-kotlin-configuration-server:8888
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://ms-kotlin-discover-server:8761/eureka
+      - SPRING_CLOUD_VAULT_HOST=ms-kotlin-vault
+      - SPRING_CLOUD_VAULT_PORT=8200
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=ms-kotlin-kafka:29092
+      - MONGODB_HOST=ms-kotlin-mongodb
+      - MONGODB_PORT=27017
+      - MONGODB_DATABASE=product-service
+      - MONGODB_USERNAME=root
+      - MONGODB_PASSWORD=""
+      - MONGODB_AUTH_DB=admin
+      - DOCKER_HOST=tcp://host.docker.internal:2375
+    ports:
+      - "8082:8082"
+    networks:
+      - ms-kotlin-microservices-network
+    # WSL-specific Docker socket mounting
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    restart: unless-stopped
+
+  # Order Service
+  ms-kotlin-order-service:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+      # Build optimizations
+      cache_from:
+        - gradle:8.14.3-jdk17
+        - openjdk:17-jdk-alpine
+      args:
+        - GRADLE_OPTS=-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true
+    container_name: ms-kotlin-order-service
+    depends_on:
+      ms-kotlin-configuration-server:
+        condition: service_healthy
+      ms-kotlin-discover-server:
+        condition: service_healthy
+      ms-kotlin-vault:
+        condition: service_healthy
+      ms-kotlin-kafka:
+        condition: service_healthy
+      ms-kotlin-mysql:
+        condition: service_healthy
+      ms-kotlin-product-service:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_CONFIG_URI=http://ms-kotlin-configuration-server:8888
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://ms-kotlin-discover-server:8761/eureka
+      - SPRING_CLOUD_VAULT_HOST=ms-kotlin-vault
+      - SPRING_CLOUD_VAULT_PORT=8200
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=ms-kotlin-kafka:29092
+      - MYSQL_HOST=ms-kotlin-mysql
+      - MYSQL_PORT=3306
+      - MYSQL_DATABASE=order-service
+      - MYSQL_USERNAME=root
+      - MYSQL_PASSWORD=""
+      - DOCKER_HOST=tcp://host.docker.internal:2375
+    ports:
+      - "8083:8083"
+    networks:
+      - ms-kotlin-microservices-network
+    # WSL-specific Docker socket mounting
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    restart: unless-stopped
+
+# ===========================================
+# PERSISTENT VOLUMES
+# ===========================================
+volumes:
+  ms-kotlin-mongodb-data:
+    driver: local
+  ms-kotlin-mysql-data:
+    driver: local
