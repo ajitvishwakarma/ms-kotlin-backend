@@ -81,3 +81,60 @@ or `/actuator/refresh` endpoint does not appear in `/actuator` listing.
 - **TODO:** Investigate Spring Cloud Bus as alternative for distributed refresh, or consider downgrading to a more stable Spring Cloud version.
 
 ---
+
+## 3. Spring Cloud Vault Authentication Error
+**Error:**
+```
+Cannot create authentication mechanism for TOKEN. This method requires either a Token (spring.cloud.vault.token) or a token file at ~/.vault-token.
+```
+
+**Root Cause:**
+- Spring Cloud Vault configuration placed in `application.properties` instead of `bootstrap.properties`
+- Vault authentication happens during **bootstrap phase** (before main application context)
+- Configuration in `application.properties` loads **too late** (during application phase)
+
+**Solution:**
+1. **Move ALL Vault configuration** from `application.properties` to `bootstrap.properties`:
+   ```properties
+   # bootstrap.properties - Loads FIRST (Bootstrap Phase)
+   spring.cloud.vault.host=localhost
+   spring.cloud.vault.port=8200
+   spring.cloud.vault.scheme=http
+   spring.cloud.vault.token=myroot
+   spring.cloud.vault.kv.enabled=true
+   spring.cloud.vault.kv.backend=secret
+   spring.cloud.vault.kv.default-context=product-service
+   spring.cloud.vault.fail-fast=false
+   ```
+
+2. **Remove Vault config** from `application.properties`:
+   ```properties
+   # application.properties - App-specific settings only
+   spring.application.name=product-service
+   server.port=0
+   # ... other app settings (NO Vault config here)
+   ```
+
+3. **Ensure bootstrap dependency** is present in `build.gradle`:
+   ```gradle
+   implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap'
+   implementation 'org.springframework.cloud:spring-cloud-starter-vault-config'
+   ```
+
+**Why This Happens:**
+- **Bootstrap Context**: Loads external configuration sources (Vault, Config Server)
+- **Application Context**: Loads after bootstrap, receives properties FROM external sources
+- Vault connection must be established **before** Spring tries to load properties from Vault
+
+**Loading Order:**
+| Phase | File | Purpose | Vault Config |
+|-------|------|---------|--------------|
+| 1st | `bootstrap.properties` | External config setup | ✅ **REQUIRED** |
+| 2nd | `application.properties` | App-specific settings | ❌ **TOO LATE** |
+
+**Verification:**
+- Start Vault: `cd vault-docker && ./start-vault.sh`
+- Load secrets: `./load-secrets.sh`
+- Run service - should connect to Vault without authentication errors
+
+---

@@ -75,6 +75,35 @@ This project is a hands-on Kotlin microservices workspace designed for Java deve
 - See the TROUBLESHOOTING.md for detailed explanation, rationale, and troubleshooting steps if `/actuator/refresh` does not work as expected.
 - **Known Issue:** Even with proper configuration, `/actuator/refresh` may still not work in Spring Cloud 2025.x + Spring Boot 3.5. Use application restart as workaround until resolved.
 
+## HashiCorp Vault Integration
+
+This project includes HashiCorp Vault for secure configuration management:
+
+### Quick Start
+```bash
+# Start Vault in Docker
+cd vault-docker
+./start-vault.sh
+
+# Load example secrets
+./load-secrets.sh
+
+# Access Vault UI: http://localhost:8200/ui (token: myroot)
+```
+
+### Configuration Pattern
+- **Bootstrap Configuration** (`bootstrap.properties`): Vault connection settings
+- **Application Configuration** (`application.properties`): App-specific settings  
+- **Critical**: Vault config MUST be in `bootstrap.properties` (loads before main context)
+
+### Spring Cloud Vault Dependencies
+```groovy
+implementation 'org.springframework.cloud:spring-cloud-starter-vault-config'
+implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap' // Required for external config
+```
+
+For detailed troubleshooting and configuration examples, see `TROUBLESHOOTING.md`.
+
 ## License
 
 This project is for educational and interview preparation purposes.

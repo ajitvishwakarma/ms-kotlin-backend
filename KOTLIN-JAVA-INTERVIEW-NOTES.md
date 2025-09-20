@@ -461,4 +461,31 @@ Unsatisfied dependency expressed through constructor parameter 0: No qualifying 
 - Ensure `management.endpoints.web.exposure.include=refresh,health,info` is set in your properties.
 - Use a POST request to `/actuator/refresh` on the correct service port.
 
+### 3. Spring Cloud Vault Authentication Error
+**Error:**
+```
+Cannot create authentication mechanism for TOKEN. This method requires either a Token (spring.cloud.vault.token) or a token file at ~/.vault-token.
+```
+**Root Cause:**
+- Vault configuration placed in `application.properties` instead of `bootstrap.properties`
+- Spring Cloud loads external configuration sources during **bootstrap phase** (before main application context)
+
+**Solution:**
+- Move ALL Vault configuration to `bootstrap.properties`:
+```properties
+# bootstrap.properties (loads FIRST)
+spring.cloud.vault.host=localhost
+spring.cloud.vault.port=8200
+spring.cloud.vault.scheme=http
+spring.cloud.vault.token=myroot
+spring.cloud.vault.kv.enabled=true
+spring.cloud.vault.kv.backend=secret
+spring.cloud.vault.kv.default-context=product-service
+```
+
+**Key Interview Points:**
+- **Bootstrap vs Application context**: Bootstrap loads external config, Application receives config from external sources
+- **Loading order matters**: Vault connection must be established before Spring tries to load properties from Vault
+- **Common mistake**: Putting external config source setup in `application.properties` instead of `bootstrap.properties`
+
 ---
