@@ -47,6 +47,9 @@ dependencies {
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'        // JSON <-> Kotlin data classes
     implementation 'org.jetbrains.kotlin:kotlin-reflect'                       // Required for Spring + Kotlin runtime
 
+    // --- Vault ---
+    implementation 'org.springframework.cloud:spring-cloud-starter-vault-config'    // Spring Cloud Vault integration
+
     // --- Lombok ---
     compileOnly 'org.projectlombok:lombok'             // Compile-time only
     annotationProcessor 'org.projectlombok:lombok'     // Annotation processor
