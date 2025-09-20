@@ -19,8 +19,8 @@ start_services() {
     echo "This may take a few minutes on first run..."
     
     # Start infrastructure first
-    echo "🔧 Starting infrastructure services (Kafka, Vault, etc.)..."
-    docker-compose up -d ms-kotlin-zookeeper ms-kotlin-kafka ms-kotlin-kafka-ui ms-kotlin-vault
+    echo "🔧 Starting infrastructure services (Kafka, Vault, Databases, etc.)..."
+    docker-compose up -d ms-kotlin-zookeeper ms-kotlin-kafka ms-kotlin-kafka-ui ms-kotlin-vault ms-kotlin-mongodb ms-kotlin-mysql
     
     echo "⏳ Waiting for infrastructure to be ready..."
     sleep 30
