@@ -20,4 +20,4 @@ RUN ./gradlew build -x test
 EXPOSE 8761
 
 # Run the application
-CMD ["java", "-jar", "build/libs/discover-server-1.0.jar"]
+CMD ["java", "-jar", "build/libs/discover-server.jar"]

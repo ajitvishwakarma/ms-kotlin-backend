@@ -20,4 +20,4 @@ RUN ./gradlew build -x test
 EXPOSE 8888
 
 # Run the application
-CMD ["java", "-jar", "build/libs/configuration-server-1.0.jar"]
+CMD ["java", "-jar", "build/libs/configuration-server.jar"]

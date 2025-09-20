@@ -81,3 +81,13 @@ kotlin {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+// Configure JAR naming for Docker
+jar {
+    archiveFileName = 'product-service.jar'
+    enabled = false // Disable plain jar
+}
+
+bootJar {
+    archiveFileName = 'product-service.jar'
+}

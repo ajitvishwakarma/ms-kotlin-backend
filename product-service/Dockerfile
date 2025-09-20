@@ -20,4 +20,4 @@ RUN ./gradlew build -x test
 EXPOSE 8082
 
 # Run the application
-CMD ["java", "-jar", "build/libs/product-service-1.0.jar"]
+CMD ["java", "-jar", "build/libs/product-service.jar"]
