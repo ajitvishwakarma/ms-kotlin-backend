@@ -1,3 +1,10 @@
+
+# Sensitive Information Warning
+
+**This is a public repository. Do NOT include any personal, confidential, or sensitive information (such as passwords, API keys, secrets, or private data) anywhere in the project. Review all code, configuration, and documentation before committing to ensure no sensitive data is present.**
+
+---
+
 # Copilot Instructions for Kotlin-Java Microservice Project
 
 ## Project Purpose
@@ -27,52 +34,53 @@ The project will be extended with:
 - **Centralized Logging**: Aggregated logs for all services (e.g., ELK stack, Loki, etc.).
 - **HashiCorp Vault Integration**: Secure secrets management for sensitive configuration.
 
-**Instructions for Contributors:**
-- When adding new features (API Gateway, fallback, logging, Vault, etc.), update this file and `Kotlin-Java-Interview-Notes.md` with:
-  - A brief description of the feature and its purpose.
-  - How it integrates with existing services.
-  - Any new patterns, libraries, or best practices introduced.
-  - Interview-focused notes and code samples comparing Kotlin and Java approaches.
-
-
-## Key Guidance for AI Agents
-
-- **Documentation Updates:**
-
-  - All Kotlin/Java interview Q&A, explanations, and comparisons must be added to `Kotlin-Java-Interview-Notes.md` in the project root.
-  - When a new Kotlin/Java topic is discussed, update this file with concise, interview-focused notes and code samples.
-  - Use side-by-side comparisons (tables or code blocks) to highlight differences between Kotlin and Java, as seen in the current notes.
-  - **Whenever I have any doubts or questions related to Kotlin (language features, patterns, best practices, etc.), research and update `Kotlin-Java-Interview-Notes.md` with your findings, explanations, and code samples. This will help grow the knowledge base for all contributors.**
+When adding new features (API Gateway, fallback, logging, Vault, etc.), update this file and `KOTLIN-JAVA-INTERVIEW-NOTES.md` with:
+- A brief description of the feature and its purpose.
+- How it integrates with existing services.
+- Any new patterns, libraries, or best practices introduced.
+- Interview-focused notes and code samples comparing Kotlin and Java approaches.
 
 ---
 
-**Sensitive Information Warning:**
+## Documentation & Contribution Guidance
 
-This is a public repository. Do NOT include any personal, confidential, or sensitive information (such as passwords, API keys, secrets, or private data) anywhere in the project. Review all code, configuration, and documentation before committing to ensure no sensitive data is present.
+**Project Knowledge & Setup:**
+- Update `README.md` with all project-specific knowledge, architecture, setup, and service integration details. This file is the single source of truth for understanding the project structure and service interactions.
 
-- **Code Patterns:**
-  - Use Kotlin idioms (data classes, null safety, extension functions, coroutines) and explain them with Java analogies where possible.
-  - For every Kotlin feature or pattern, provide a Java equivalent or note if there is none.
-  - Avoid using Lombok in Kotlin code; document why in the notes if asked.
+**Troubleshooting:**
+- Document all issues and their solutions in `TROUBLESHOOTING.md`. For each issue, include the error message, root cause, and the fix. This helps future contributors quickly resolve common issues.
 
-- **Workflow:**
-  - Build: Use Gradle wrapper scripts (`./gradlew build` or `gradlew.bat build`).
-  - Tests: Place tests under `src/test/kotlin/` and run with Gradle.
-  - Main code is under `src/main/kotlin/`.
-
-- **Conventions:**
-  - Keep explanations concise and interview-oriented.
-  - Use markdown tables for feature comparisons.
-  - Reference key files and directories in explanations (e.g., `Product.kt` for data class examples).
-  - When refactoring or enriching the notes, always preserve existing valuable content.
-
-- **Examples:**
-  - When documenting a Kotlin data class, show the Java POJO and Lombok equivalent.
-  - For null safety, show how Kotlin's nullable types compare to Java's approach.
-
-- **Motivation:**
-  - The project is meant to help a Java developer quickly revise Kotlin, understand differences, and prepare for interviews with practical, side-by-side examples.
+**Kotlin/Java Q&A and Interview Notes:**
+- All Kotlin/Java interview Q&A, explanations, and comparisons must be added to `KOTLIN-JAVA-INTERVIEW-NOTES.md` in the project root.
+- When a new Kotlin/Java topic is discussed, update this file with concise, interview-focused notes and code samples.
+- Use side-by-side comparisons (tables or code blocks) to highlight differences between Kotlin and Java, as seen in the current notes.
+- Whenever you have any doubts or questions related to Kotlin (language features, patterns, best practices, etc.), research and update `KOTLIN-JAVA-INTERVIEW-NOTES.md` with your findings, explanations, and code samples. This will help grow the knowledge base for all contributors.
 
 ---
 
-For more, see `Kotlin-Java-Interview-Notes.md` and update it as the single source of truth for Kotlin/Java Q&A in this project.
+## Code Patterns & Conventions
+
+- Use Kotlin idioms (data classes, null safety, extension functions, coroutines) and explain them with Java analogies where possible.
+- For every Kotlin feature or pattern, provide a Java equivalent or note if there is none.
+- Avoid using Lombok in Kotlin code; document why in the notes if asked.
+- Build: Use Gradle wrapper scripts (`./gradlew build` or `gradlew.bat build`).
+- Tests: Place tests under `src/test/kotlin/` and run with Gradle.
+- Main code is under `src/main/kotlin/`.
+- Keep explanations concise and interview-oriented.
+- Use markdown tables for feature comparisons.
+- Reference key files and directories in explanations (e.g., `Product.kt` for data class examples).
+- When refactoring or enriching the notes, always preserve existing valuable content.
+
+**Examples:**
+- When documenting a Kotlin data class, show the Java POJO and Lombok equivalent.
+- For null safety, show how Kotlin's nullable types compare to Java's approach.
+
+---
+
+## Motivation
+
+The project is meant to help a Java developer quickly revise Kotlin, understand differences, and prepare for interviews with practical, side-by-side examples.
+
+---
+
+For more, see `KOTLIN-JAVA-INTERVIEW-NOTES.md` and update it as the single source of truth for Kotlin/Java Q&A in this project.
