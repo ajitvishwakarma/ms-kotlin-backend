@@ -54,3 +54,9 @@
 # Ignore generated resources (all modules)
 **/resources/main/
 **/resources/test/
+
+# Organization
+.organized
+*.backup
+temp/
+cache/
