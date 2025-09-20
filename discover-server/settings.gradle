@@ -1,1 +1,13 @@
 rootProject.name = 'discover-server'
+
+// Build cache configuration for faster builds
+buildCache {
+    local {
+        enabled = true
+        directory = new File(rootDir, 'build-cache')
+        removeUnusedEntriesAfterDays = 7
+    }
+    remote(HttpBuildCache) {
+        enabled = false // Enable if you have a remote cache server
+    }
+}

@@ -158,6 +158,12 @@ services:
     build:
       context: ./configuration-server
       dockerfile: Dockerfile
+      # Build optimizations
+      cache_from:
+        - gradle:8.14.3-jdk17
+        - openjdk:17-jdk-alpine
+      args:
+        - GRADLE_OPTS=-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true
     container_name: ms-kotlin-configuration-server
     depends_on:
       ms-kotlin-vault:
@@ -190,6 +196,12 @@ services:
     build:
       context: ./discover-server
       dockerfile: Dockerfile
+      # Build optimizations
+      cache_from:
+        - gradle:8.14.3-jdk17
+        - openjdk:17-jdk-alpine
+      args:
+        - GRADLE_OPTS=-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true
     container_name: ms-kotlin-discover-server
     depends_on:
       ms-kotlin-configuration-server:
@@ -221,6 +233,12 @@ services:
     build:
       context: ./product-service
       dockerfile: Dockerfile
+      # Build optimizations
+      cache_from:
+        - gradle:8.14.3-jdk17
+        - openjdk:17-jdk-alpine
+      args:
+        - GRADLE_OPTS=-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true
     container_name: ms-kotlin-product-service
     depends_on:
       ms-kotlin-configuration-server:
@@ -267,6 +285,12 @@ services:
     build:
       context: ./order-service
       dockerfile: Dockerfile
+      # Build optimizations
+      cache_from:
+        - gradle:8.14.3-jdk17
+        - openjdk:17-jdk-alpine
+      args:
+        - GRADLE_OPTS=-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true
     container_name: ms-kotlin-order-service
     depends_on:
       ms-kotlin-configuration-server:
