@@ -33,6 +33,7 @@ dependencies {
     // --- Core Spring Boot Starters ---
     implementation 'org.springframework.boot:spring-boot-starter-web'          // REST API + embedded Tomcat
     implementation 'org.springframework.boot:spring-boot-starter-actuator'     // Monitoring + actuator endpoints
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'     // JPA + Hibernate for database operations
 
     // --- Spring Cloud ---
     implementation 'org.springframework.cloud:spring-cloud-starter-config'     // Config Server client
