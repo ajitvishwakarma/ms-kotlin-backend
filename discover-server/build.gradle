@@ -27,6 +27,9 @@ dependencies {
 	// --- Spring Cloud ---
 	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-server' // Eureka server
 
+	// --- Spring Boot Actuator for Health Checks ---
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'     // Monitoring + actuator endpoints
+
 	// --- Kotlin ---
 	implementation 'org.jetbrains.kotlin:kotlin-reflect'                       // Required for Spring + Kotlin runtime
 

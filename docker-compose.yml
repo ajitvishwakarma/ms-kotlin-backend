@@ -105,8 +105,6 @@ services:
     image: mongo:7.0
     container_name: ms-kotlin-mongodb
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: ""
       MONGO_INITDB_DATABASE: product-service
       DOCKER_HOST: tcp://host.docker.internal:2375
     ports:
@@ -184,7 +182,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 90s
     restart: unless-stopped
 
   # Service Discovery Server
