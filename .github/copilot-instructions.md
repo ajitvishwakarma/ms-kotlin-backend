@@ -42,6 +42,44 @@ When adding new features (API Gateway, fallback, logging, Vault, etc.), update t
 
 ---
 
+## Git Commit Best Practices
+
+**Logical Grouping:**
+- Always group related changes into separate commits by their purpose
+- Never combine unrelated changes (e.g., feature + documentation + fixes) into one commit
+- Create focused, atomic commits that can be reviewed and reverted independently
+
+**When Asked for Git Messages:**
+- Suggest which files to group together and their respective commit messages
+- Provide clear, descriptive commit messages following conventional commit format
+- Group by: features, fixes, documentation, dependencies, configuration, etc.
+
+**When Asked to Commit:**
+- Automatically group and commit changes logically without asking
+- Use meaningful commit messages with proper prefixes: `feat:`, `fix:`, `docs:`, `refactor:`, etc.
+- Include detailed descriptions for complex changes
+- Reference related issues or architectural decisions when relevant
+
+**Commit Message Format:**
+```
+<type>: <subject>
+
+<optional body with detailed explanation>
+- Bullet points for multiple changes
+- Technical details and reasoning
+- Impact on other components
+```
+
+**Common Groupings:**
+1. **Dependencies**: `build.gradle`, `pom.xml` changes
+2. **Configuration**: Properties files, config changes
+3. **Features**: New functionality implementation
+4. **Fixes**: Bug fixes and error corrections
+5. **Documentation**: README, troubleshooting, interview notes
+6. **Refactoring**: Code improvements without behavior changes
+
+---
+
 ## Documentation & Contribution Guidance
 
 **Project Knowledge & Setup:**
