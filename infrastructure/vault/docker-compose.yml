@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  ms-kotlin-vault:
+    image: hashicorp/vault:latest
+    container_name: ms-kotlin-vault
+    ports:
+      - "8200:8200"
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: myroot
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - vault-data:/vault/data
+      - ./config:/vault/config
+      - ./secrets:/vault/secrets
+    command: vault server -dev -dev-listen-address=0.0.0.0:8200
+    networks:
+      - ms-kotlin-microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8200/v1/sys/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  vault-data:
+    driver: local
+
+networks:
+  ms-kotlin-microservices-network:
+    external: true

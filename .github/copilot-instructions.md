@@ -1,29 +1,32 @@
 
-# Sensitive Information Warning
-
-**This is a public repository. Do NOT include any personal, confidential, or sensitive information (such as passwords, API keys, secrets, or private data) anywhere in the project. Review all code, configuration, and documentation before committing to ensure no sensitive data is present.**
-
----
-
 # Copilot Instructions for Kotlin-Java Microservice Project
 
 ## Project Purpose
-This project is a Kotlin-based microservice, designed for interview preparation and to help Java developers transition to Kotlin. The goal is to compare Kotlin and Java approaches, document key differences, and build a practical reference for both languages in a real-world service context.
+This project is a **Kotlin-based microservice for interview preparation** and to help Java developers transition to Kotlin. The primary goal is to **quickly revise Kotlin concepts, microservices patterns, and real-world coding scenarios** for job interviews.
+
+## 🎯 **FOCUS AREAS (Interview Priorities)**
+1. **Kotlin Language Features**: Data classes, null safety, coroutines, extension functions
+2. **Microservices Patterns**: Service discovery, configuration management, messaging
+3. **Spring Boot + Kotlin**: Integration, best practices, common interview questions
+4. **Real-world Scenarios**: Database integration, REST APIs, error handling
+
+## ⚠️ **EFFICIENCY RULES**
+- **Keep it simple**: Don't over-engineer solutions
+- **Speed over perfection**: Focus on learning and quick iteration
+- **Interview-relevant only**: Skip complex infrastructure unless directly needed
+- **Time-conscious**: User has limited time for interview prep
 
 ## Microservice Overview
 
-This workspace contains several microservices, each with a specific role:
-
-- **configuration-server**: Centralized configuration management for all services. Likely uses Spring Cloud Config or similar. Stores and serves configuration properties for other microservices.
-- **discover-server**: Service discovery (Eureka or similar). Allows services to register and discover each other dynamically.
-- **order-service**: Handles order management (CRUD, business logic). Connects to product-service and uses configuration-server for config.
-- **product-service**: Manages product catalog and related operations. Interacts with order-service and uses configuration-server for config.
+**Organized Structure:**
+- **infrastructure/**: All infrastructure components (Kafka, Vault, DBs) with management scripts
+- **core-services/**: Configuration and Discovery servers
+- **business-services/**: Product and Order services (main focus for learning)
 
 **Architecture:**
-- Services are likely RESTful, using Spring Boot or Kotlin frameworks.
-- Configuration is externalized via configuration-server.
-- Service discovery is handled by discover-server.
-- Each service has its own Gradle build and follows a standard src/main/kotlin and src/test/kotlin structure.
+- **Infrastructure**: Automated startup with `./infrastructure/manage-infrastructure.sh`
+- **Core Services**: Spring Cloud Config + Eureka Discovery
+- **Business Services**: REST APIs with database integration (main interview focus)
 
 ## Planned/Upcoming Features
 
@@ -44,33 +47,26 @@ When adding new features (API Gateway, fallback, logging, Vault, etc.), update t
 
 ## Development & Testing Workflow
 
-**ALWAYS Follow This Order:**
-1. **Analyze First**: Check existing code, understand current implementation
-2. **Plan & Discuss**: Propose approach, ask for clarification if needed  
-3. **Implement**: Make only the requested changes
-4. **Test & Verify**: Let user test everything first before committing
-5. **Commit Only After Verification**: Never commit untested changes
+**EFFICIENCY FIRST - Interview Prep Focus:**
+1. **Quick Start**: `./start.sh` - starts everything automatically
+2. **Focus on Business Services**: `business-services/` folder - this is where you'll spend most time
+3. **Test & Learn**: Use the running services to practice Kotlin coding patterns
 
-**Before Adding New Code:**
-- **Search for existing implementations** using grep_search, file_search, or semantic_search
-- **Check what's already there** - don't duplicate functionality
-- **Ask before assuming** - if you think something might be useful, offer it as a suggestion
-- **Read existing controllers, services, configs** to understand patterns
+**Infrastructure Management:**
+- Infrastructure is automated - don't spend time on DevOps unless needed
+- Use `./infrastructure/manage-infrastructure.sh` for infrastructure only
+- Focus your time on Kotlin language features and business logic
 
-**Testing Protocol:**
-- User tests functionality first
-- Fix any issues found during testing
-- Only commit after user confirms everything works
-- Never commit "untested" or "assumed working" code
+**Code Changes Priority:**
+1. **Business Services**: product-service, order-service (main learning focus)
+2. **Kotlin Features**: Data classes, coroutines, extension functions
+3. **Spring Boot Patterns**: Controllers, services, repositories
+4. **Interview Scenarios**: REST APIs, database operations, error handling
 
-**Code Changes:**
-- Make minimal, focused changes that address the specific request
-- Don't add extra features unless explicitly asked
-- If you see opportunities for improvement, suggest them separately
-- Respect existing code patterns and conventions
-- **NEVER implement solutions proactively** - always ask first
-- **STOP and ASK** before creating additional files, features, or "improvements"
-- Only do exactly what is requested, nothing more
+**DON'T OVERCOMPLICATE:**
+- Infrastructure is ready - focus on business logic
+- Skip complex DevOps unless directly asked
+- Prioritize Kotlin learning over infrastructure tweaks
 
 ---
 

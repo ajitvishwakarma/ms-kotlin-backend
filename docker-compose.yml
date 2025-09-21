@@ -132,7 +132,7 @@ services:
   # Configuration Server (Must start first among microservices)
   ms-kotlin-configuration-server:
     build:
-      context: ./configuration-server
+      context: ./core-services/configuration-server
       dockerfile: Dockerfile
       cache_from:
         - gradle:8.14.3-jdk17
@@ -165,7 +165,7 @@ services:
   # Service Discovery Server
   ms-kotlin-discover-server:
     build:
-      context: ./discover-server
+      context: ./core-services/discover-server
       dockerfile: Dockerfile
       cache_from:
         - gradle:8.14.3-jdk17
@@ -197,7 +197,7 @@ services:
   # Product Service
   ms-kotlin-product-service:
     build:
-      context: ./product-service
+      context: ./business-services/product-service
       dockerfile: Dockerfile
       cache_from:
         - gradle:8.14.3-jdk17
@@ -244,7 +244,7 @@ services:
   # Order Service
   ms-kotlin-order-service:
     build:
-      context: ./order-service
+      context: ./business-services/order-service
       dockerfile: Dockerfile
       cache_from:
         - gradle:8.14.3-jdk17

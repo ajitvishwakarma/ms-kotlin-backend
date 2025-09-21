@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  ms-kotlin-mongodb:
+    image: mongo:7.0
+    container_name: ms-kotlin-mongodb
+    environment:
+      MONGO_INITDB_DATABASE: product-service
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb-data:/data/db
+      - ../../init-scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - ms-kotlin-microservices-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ms-kotlin-mysql:
+    image: mysql:8.0
+    container_name: ms-kotlin-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ""
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: order-service
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ../../init-scripts/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql:ro
+    networks:
+      - ms-kotlin-microservices-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mongodb-data:
+    driver: local
+  mysql-data:
+    driver: local
+
+networks:
+  ms-kotlin-microservices-network:
+    external: true

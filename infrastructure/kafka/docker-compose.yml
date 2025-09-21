@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  ms-kotlin-zookeeper:
+    image: zookeeper:3.6
+    container_name: ms-kotlin-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - ms-kotlin-microservices-network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ms-kotlin-kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: ms-kotlin-kafka
+    depends_on:
+      ms-kotlin-zookeeper:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: ms-kotlin-zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://ms-kotlin-kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_DELETE_TOPIC_ENABLE: 'true'
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    networks:
+      - ms-kotlin-microservices-network
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  ms-kotlin-kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: ms-kotlin-kafka-ui
+    depends_on:
+      ms-kotlin-kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: ms-kotlin-kafka:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: ms-kotlin-zookeeper:2181
+    ports:
+      - "8090:8080"
+    networks:
+      - ms-kotlin-microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+networks:
+  ms-kotlin-microservices-network:
+    external: true
