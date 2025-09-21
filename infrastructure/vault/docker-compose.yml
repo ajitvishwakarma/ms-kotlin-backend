@@ -20,7 +20,7 @@ services:
     networks:
       - ms-kotlin-microservices-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8200/v1/sys/health"]
+      test: ["CMD", "sh", "-c", "VAULT_ADDR=http://localhost:8200 vault status"]
       interval: 10s
       timeout: 5s
       retries: 5
