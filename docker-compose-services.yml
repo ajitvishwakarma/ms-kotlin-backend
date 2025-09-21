@@ -1,0 +1,133 @@
+networks:
+  ms-kotlin-microservices-network:
+    external: true
+
+services:
+  # ===========================================
+  # CORE MICROSERVICES (Start in Order)
+  # ===========================================
+
+  # Configuration Server (Must start first among microservices)
+  ms-kotlin-configuration-server:
+    build:
+      context: ./core-services/configuration-server
+      dockerfile: Dockerfile
+      cache_from:
+        - gradle:8.14.3-jdk17
+        - openjdk:17-jdk-alpine
+      args:
+        - GRADLE_OPTS=-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true
+    container_name: ms-kotlin-configuration-server
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=https://github.com/ajitvishwakarma/ms-kotlin-backend
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_DEFAULT_LABEL=main
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_TIMEOUT=10
+      - VAULT_TOKEN=myroot
+      - VAULT_HOST=ms-kotlin-vault
+      - VAULT_PORT=8200
+    ports:
+      - "8888:8888"
+    networks:
+      - ms-kotlin-microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8888/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Discovery Server (Start after Config Server)
+  ms-kotlin-discover-server:
+    build:
+      context: ./core-services/discover-server
+      dockerfile: Dockerfile
+      cache_from:
+        - gradle:8.14.3-jdk17
+        - openjdk:17-jdk-alpine
+      args:
+        - GRADLE_OPTS=-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true
+    container_name: ms-kotlin-discover-server
+    depends_on:
+      ms-kotlin-configuration-server:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CONFIG_IMPORT=configserver:http://ms-kotlin-configuration-server:8888
+      - EUREKA_INSTANCE_HOSTNAME=ms-kotlin-discover-server
+    ports:
+      - "8761:8761"
+    networks:
+      - ms-kotlin-microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ===========================================
+  # BUSINESS MICROSERVICES
+  # ===========================================
+
+  # Product Service (Uses MongoDB)
+  ms-kotlin-product-service:
+    build:
+      context: ./business-services/product-service
+      dockerfile: Dockerfile
+      cache_from:
+        - gradle:8.14.3-jdk17
+        - openjdk:17-jdk-alpine
+      args:
+        - GRADLE_OPTS=-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true
+    container_name: ms-kotlin-product-service
+    depends_on:
+      ms-kotlin-discover-server:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CONFIG_IMPORT=configserver:http://ms-kotlin-configuration-server:8888
+      - SPRING_DATA_MONGODB_URI=mongodb://ms-kotlin-mongodb:27017/product-service
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://ms-kotlin-discover-server:8761/eureka
+    ports:
+      - "8082:8082"
+    networks:
+      - ms-kotlin-microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Order Service (Uses MySQL)
+  ms-kotlin-order-service:
+    build:
+      context: ./business-services/order-service
+      dockerfile: Dockerfile
+      cache_from:
+        - gradle:8.14.3-jdk17
+        - openjdk:17-jdk-alpine
+      args:
+        - GRADLE_OPTS=-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true
+    container_name: ms-kotlin-order-service
+    depends_on:
+      ms-kotlin-discover-server:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CONFIG_IMPORT=configserver:http://ms-kotlin-configuration-server:8888
+      - SPRING_DATASOURCE_URL=jdbc:mysql://ms-kotlin-mysql:3306/order-service
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://ms-kotlin-discover-server:8761/eureka
+    ports:
+      - "8083:8083"
+    networks:
+      - ms-kotlin-microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
