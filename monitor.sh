@@ -10,7 +10,9 @@ set -e
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
+BLUE='\    local refresh_interval=${1:-1}  # Real-time 1-second refresh for instant updates
+    
+    echo -e "${CYAN}🚀 Starting blazing fast monitor... (refresh every ${refresh_interval}s)${NC}"[0;34m'
 PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
 WHITE='\033[1;37m'
@@ -34,80 +36,130 @@ declare -A MICROSERVICES=(
     ["ms-kotlin-order-service"]="Orders:8083"
 )
 
-# Status icons and colors
+# BLAZING FAST: Single docker ps call for all container status
+get_all_container_status() {
+    local -n result_array=$1
+    
+    # Single docker ps call - much faster than multiple docker inspect calls
+    local docker_output=$(docker ps -a --format "{{.Names}}:{{.Status}}" --filter "name=ms-kotlin-" 2>/dev/null || echo "")
+    
+    # Parse into associative array for instant lookup
+    while IFS=':' read -r name status; do
+        if [ -n "$name" ]; then
+            # Convert docker ps status to our format
+            if [[ "$status" == *"(healthy)"* ]]; then
+                result_array["$name"]="running:healthy"
+            elif [[ "$status" == *"(starting)"* ]]; then
+                result_array["$name"]="running:starting"
+            elif [[ "$status" == *"(unhealthy)"* ]]; then
+                result_array["$name"]="running:unhealthy"
+            elif [[ "$status" == "Up"* ]]; then
+                result_array["$name"]="running:no-healthcheck"
+            elif [[ "$status" == "Restarting"* ]]; then
+                result_array["$name"]="restarting:unknown"
+            elif [[ "$status" == "Paused"* ]]; then
+                result_array["$name"]="paused:unknown"
+            elif [[ "$status" == "Exited"* ]]; then
+                result_array["$name"]="exited:unknown"
+            else
+                result_array["$name"]="unknown:unknown"
+            fi
+        fi
+    done <<< "$docker_output"
+    
+    # Fill in missing containers (not running)
+    for container_name in "${!INFRASTRUCTURE_SERVICES[@]}" "${!MICROSERVICES[@]}"; do
+        if [ -z "${result_array[$container_name]}" ]; then
+            result_array["$container_name"]="NOT_RUNNING:unknown"
+        fi
+    done
+}
+
+# Status icons and colors (optimized for cached data)
 get_status_display() {
     local container_name=$1
+    local status_health=${2:-""}
     local status=""
     local health=""
     local icon=""
     local color=""
     
-    # Check if container exists and get status
-    if docker inspect "$container_name" >/dev/null 2>&1; then
-        status=$(docker inspect --format='{{.State.Status}}' "$container_name" 2>/dev/null)
-        health=$(docker inspect --format='{{.State.Health.Status}}' "$container_name" 2>/dev/null || echo "no-healthcheck")
-        
-        case "$status" in
-            "running")
-                case "$health" in
-                    "healthy")
-                        icon="✅"
-                        color=$GREEN
-                        status="HEALTHY"
-                        ;;
-                    "starting")
-                        icon="⏳"
-                        color=$YELLOW
-                        status="STARTING"
-                        ;;
-                    "unhealthy")
-                        icon="⚠️ "
-                        color=$RED
-                        status="UNHEALTHY"
-                        ;;
-                    "no-healthcheck")
-                        icon="🟢"
-                        color=$GREEN
-                        status="RUNNING"
-                        ;;
-                    *)
-                        icon="❓"
-                        color=$PURPLE
-                        status="UNKNOWN"
-                        ;;
-                esac
-                ;;
-            "restarting")
-                icon="🔄"
-                color=$YELLOW
-                status="RESTARTING"
-                ;;
-            "paused")
-                icon="⏸️ "
-                color=$BLUE
-                status="PAUSED"
-                ;;
-            "exited")
-                icon="❌"
-                color=$RED
-                status="STOPPED"
-                ;;
-            "dead")
-                icon="💀"
-                color=$RED
-                status="DEAD"
-                ;;
-            *)
-                icon="❓"
-                color=$PURPLE
-                status="UNKNOWN"
-                ;;
-        esac
+    # If cached status_health is provided, use it (much faster)
+    if [ -n "$status_health" ]; then
+        status=$(echo "$status_health" | cut -d':' -f1)
+        health=$(echo "$status_health" | cut -d':' -f2)
     else
-        icon="⚫"
-        color=$GRAY
-        status="NOT RUNNING"
+        # Fallback to individual docker inspect (slower)
+        if docker inspect "$container_name" >/dev/null 2>&1; then
+            status=$(docker inspect --format='{{.State.Status}}' "$container_name" 2>/dev/null)
+            health=$(docker inspect --format='{{.State.Health.Status}}' "$container_name" 2>/dev/null || echo "no-healthcheck")
+        else
+            status="NOT_RUNNING"
+            health="unknown"
+        fi
     fi
+    
+    case "$status" in
+        "running")
+            case "$health" in
+                "healthy")
+                    icon="✅"
+                    color=$GREEN
+                    status="HEALTHY"
+                    ;;
+                "starting")
+                    icon="⏳"
+                    color=$YELLOW
+                    status="STARTING"
+                    ;;
+                "unhealthy")
+                    icon="⚠️ "
+                    color=$RED
+                    status="UNHEALTHY"
+                    ;;
+                "no-healthcheck")
+                    icon="🟢"
+                    color=$GREEN
+                    status="RUNNING"
+                    ;;
+                *)
+                    icon="❓"
+                    color=$PURPLE
+                    status="UNKNOWN"
+                    ;;
+            esac
+            ;;
+        "restarting")
+            icon="🔄"
+            color=$YELLOW
+            status="RESTARTING"
+            ;;
+        "paused")
+            icon="⏸️ "
+            color=$BLUE
+            status="PAUSED"
+            ;;
+        "exited")
+            icon="❌"
+            color=$RED
+            status="STOPPED"
+            ;;
+        "dead")
+            icon="💀"
+            color=$RED
+            status="DEAD"
+            ;;
+        "NOT_RUNNING")
+            icon="⚫"
+            color=$GRAY
+            status="NOT RUNNING"
+            ;;
+        *)
+            icon="❓"
+            color=$PURPLE
+            status="UNKNOWN"
+            ;;
+    esac
     
     echo -e "${color}${icon} ${status}${NC}"
 }
@@ -149,132 +201,171 @@ show_header() {
 show_service_group() {
     local title=$1
     local -n services=$2
+    local -n status_cache=$3  # New parameter for cached status
     local max_name_len=25
+    local output=""
     
-    echo -e "${WHITE}┌─ ${title} ${WHITE}$(printf '─%.0s' $(seq 1 $((60 - ${#title}))))"
-    echo -e "${WHITE}│${NC}"
-    printf "${WHITE}│${NC} %-${max_name_len}s %s %s %s\n" "SERVICE" "STATUS" "UPTIME" "ENDPOINT"
-    echo -e "${WHITE}│${NC} $(printf '─%.0s' $(seq 1 $max_name_len)) ────────── ──────── ─────────────────"
+    # Build the entire output at once for instant display
+    output+="${WHITE}┌─ ${title} ${WHITE}$(printf '─%.0s' $(seq 1 $((60 - ${#title}))))\n"
+    output+="${WHITE}│${NC}\n"
+    output+="${WHITE}│${NC} $(printf "%-${max_name_len}s %s %s" "SERVICE" "STATUS" "ENDPOINT")\n"
+    output+="${WHITE}│${NC} $(printf '─%.0s' $(seq 1 $max_name_len)) ────────── ─────────────────\n"
     
     for container_name in "${!services[@]}"; do
         local service_info="${services[$container_name]}"
         local service_name=$(echo "$service_info" | cut -d':' -f1)
         local port=$(echo "$service_info" | cut -d':' -f2)
         
-        local status_display=$(get_status_display "$container_name")
-        local uptime=$(get_uptime "$container_name")
+        # Use cached status if available (blazing fast!)
+        local cached_status="${status_cache[$container_name]:-""}"
+        local status_display=$(get_status_display "$container_name" "$cached_status")
         local endpoint="localhost:$port"
         
-        printf "${WHITE}│${NC} %-${max_name_len}s %s %-8s ${CYAN}%s${NC}\n" \
+        output+="${WHITE}│${NC} $(printf "%-${max_name_len}s %s ${CYAN}%s${NC}" \
             "$service_name" \
             "$status_display" \
-            "$uptime" \
-            "$endpoint"
+            "$endpoint")\n"
     done
     
-    echo -e "${WHITE}└$(printf '─%.0s' $(seq 1 77))${NC}"
-    echo
+    output+="${WHITE}└$(printf '─%.0s' $(seq 1 77))${NC}\n"
+    output+="\n"
+    
+    # Print all at once for instant display
+    echo -e "$output"
 }
 
 show_summary() {
+    local -n status_cache=$1  # Use cached status data
     local total=0
     local running=0
     local healthy=0
     local starting=0
     local stopped=0
+    local output=""
     
-    # Count infrastructure services
+    # Count infrastructure services using cached data
     for container_name in "${!INFRASTRUCTURE_SERVICES[@]}"; do
         ((total++))
-        if docker inspect "$container_name" >/dev/null 2>&1; then
-            local status=$(docker inspect --format='{{.State.Status}}' "$container_name" 2>/dev/null)
-            local health=$(docker inspect --format='{{.State.Health.Status}}' "$container_name" 2>/dev/null || echo "no-healthcheck")
-            
-            if [ "$status" = "running" ]; then
-                ((running++))
-                if [ "$health" = "healthy" ] || [ "$health" = "no-healthcheck" ]; then
-                    ((healthy++))
-                elif [ "$health" = "starting" ]; then
-                    ((starting++))
-                fi
-            else
-                ((stopped++))
+        local cached_status="${status_cache[$container_name]:-"NOT_RUNNING:unknown"}"
+        local status=$(echo "$cached_status" | cut -d':' -f1)
+        local health=$(echo "$cached_status" | cut -d':' -f2)
+        
+        if [ "$status" = "running" ]; then
+            ((running++))
+            if [ "$health" = "healthy" ] || [ "$health" = "no-healthcheck" ]; then
+                ((healthy++))
+            elif [ "$health" = "starting" ]; then
+                ((starting++))
             fi
         else
             ((stopped++))
         fi
     done
     
-    # Count microservices
+    # Count microservices using cached data
     for container_name in "${!MICROSERVICES[@]}"; do
         ((total++))
-        if docker inspect "$container_name" >/dev/null 2>&1; then
-            local status=$(docker inspect --format='{{.State.Status}}' "$container_name" 2>/dev/null)
-            local health=$(docker inspect --format='{{.State.Health.Status}}' "$container_name" 2>/dev/null || echo "no-healthcheck")
-            
-            if [ "$status" = "running" ]; then
-                ((running++))
-                if [ "$health" = "healthy" ] || [ "$health" = "no-healthcheck" ]; then
-                    ((healthy++))
-                elif [ "$health" = "starting" ]; then
-                    ((starting++))
-                fi
-            else
-                ((stopped++))
+        local cached_status="${status_cache[$container_name]:-"NOT_RUNNING:unknown"}"
+        local status=$(echo "$cached_status" | cut -d':' -f1)
+        local health=$(echo "$cached_status" | cut -d':' -f2)
+        
+        if [ "$status" = "running" ]; then
+            ((running++))
+            if [ "$health" = "healthy" ] || [ "$health" = "no-healthcheck" ]; then
+                ((healthy++))
+            elif [ "$health" = "starting" ]; then
+                ((starting++))
             fi
         else
             ((stopped++))
         fi
     done
     
-    echo -e "${WHITE}┌─ SUMMARY ────────────────────────────────────────────────────────────────────┐${NC}"
-    echo -e "${WHITE}│${NC}"
-    printf "${WHITE}│${NC} ${GREEN}✅ Healthy: %2d${NC}  ${YELLOW}⏳ Starting: %2d${NC}  ${RED}❌ Stopped: %2d${NC}  ${BLUE}📊 Total: %2d${NC}\n" \
-        "$healthy" "$starting" "$stopped" "$total"
-    echo -e "${WHITE}│${NC}"
+    # Build output all at once
+    output+="${WHITE}┌─ SUMMARY ────────────────────────────────────────────────────────────────────┐${NC}\n"
+    output+="${WHITE}│${NC}\n"
+    output+="${WHITE}│${NC} ${GREEN}✅ Healthy: ${healthy}${NC}  ${YELLOW}⏳ Starting: ${starting}${NC}  ${RED}❌ Stopped: ${stopped}${NC}  ${BLUE}📊 Total: ${total}${NC}\n"
+    output+="${WHITE}│${NC}\n"
     
     # Overall status
     if [ $healthy -eq $total ]; then
-        echo -e "${WHITE}│${NC} ${GREEN}🎉 All services are healthy and running!${NC}"
+        output+="${WHITE}│${NC} ${GREEN}🎉 All services are healthy and running!${NC}\n"
     elif [ $running -gt 0 ]; then
         if [ $starting -gt 0 ]; then
-            echo -e "${WHITE}│${NC} ${YELLOW}⏳ Some services are still starting up...${NC}"
+            output+="${WHITE}│${NC} ${YELLOW}⏳ Some services are still starting up...${NC}\n"
         else
-            echo -e "${WHITE}│${NC} ${YELLOW}⚠️  Some services need attention${NC}"
+            output+="${WHITE}│${NC} ${YELLOW}⚠️  Some services need attention${NC}\n"
         fi
     else
-        echo -e "${WHITE}│${NC} ${RED}🛑 No services are running${NC}"
+        output+="${WHITE}│${NC} ${RED}🛑 No services are running${NC}\n"
     fi
     
-    echo -e "${WHITE}│${NC}"
-    echo -e "${WHITE}└──────────────────────────────────────────────────────────────────────────────┘${NC}"
+    output+="${WHITE}│${NC}\n"
+    output+="${WHITE}└──────────────────────────────────────────────────────────────────────────────┘${NC}\n"
+    
+    # Print all at once
+    echo -e "$output"
 }
 
 show_quick_actions() {
-    echo
-    echo -e "${WHITE}┌─ QUICK ACTIONS ──────────────────────────────────────────────────────────────┐${NC}"
-    echo -e "${WHITE}│${NC} ${CYAN}./start-infra.sh${NC}     - Start infrastructure services"
-    echo -e "${WHITE}│${NC} ${CYAN}./start-dev.sh${NC}       - Start development services"
-    echo -e "${WHITE}│${NC} ${CYAN}./stop-infra.sh${NC}      - Stop infrastructure"
-    echo -e "${WHITE}│${NC} ${CYAN}./stop-dev.sh${NC}        - Stop development services"
-    echo -e "${WHITE}│${NC} ${GRAY}Ctrl+C${NC}               - Exit monitor"
-    echo -e "${WHITE}└──────────────────────────────────────────────────────────────────────────────┘${NC}"
+    local output=""
+    
+    output+="\n"
+    output+="${WHITE}┌─ QUICK ACTIONS ──────────────────────────────────────────────────────────────┐${NC}\n"
+    output+="${WHITE}│${NC} ${CYAN}./start-infra.sh${NC}     - Start infrastructure services\n"
+    output+="${WHITE}│${NC} ${CYAN}./start-dev.sh${NC}       - Start development services\n"
+    output+="${WHITE}│${NC} ${CYAN}./stop-infra.sh${NC}      - Stop infrastructure\n"
+    output+="${WHITE}│${NC} ${CYAN}./stop-dev.sh${NC}        - Stop development services\n"
+    output+="${WHITE}│${NC} ${GRAY}Ctrl+C${NC}               - Exit monitor\n"
+    output+="${WHITE}└──────────────────────────────────────────────────────────────────────────────┘${NC}\n"
+    
+    # Print all at once
+    echo -e "$output"
 }
 
 monitor_loop() {
-    local refresh_interval=${1:-3}
+    local refresh_interval=${1:-2}  # Faster default for real-time feel
     
-    echo -e "${CYAN}🔍 Starting service monitor... (refresh every ${refresh_interval}s)${NC}"
+    echo -e "${CYAN}� Starting blazing fast monitor... (refresh every ${refresh_interval}s)${NC}"
     echo -e "${GRAY}Press Ctrl+C to exit${NC}"
     echo
     
+    # Hide cursor for better experience
+    tput civis 2>/dev/null || true
+    
+    # Trap to restore cursor on exit
+    trap 'tput cnorm 2>/dev/null || true; exit' INT TERM EXIT
+    
     while true; do
+        # Start timer for performance
+        local start_time=$(date +%s.%N 2>/dev/null || date +%s)
+        
+        # BLAZING FAST: Clear cache and get fresh status with single docker ps call
+        unset container_status_cache
+        declare -A container_status_cache
+        get_all_container_status container_status_cache
+        
+        # Collect ALL display content first, then show at once
+        local header_content=$(show_header)
+        local infra_content=$(show_service_group "🏗️  INFRASTRUCTURE SERVICES" INFRASTRUCTURE_SERVICES container_status_cache)
+        local micro_content=$(show_service_group "🚀 MICROSERVICES" MICROSERVICES container_status_cache)
+        local summary_content=$(show_summary container_status_cache)
+        local actions_content=$(show_quick_actions)
+        
+        # Calculate performance
+        local end_time=$(date +%s.%N 2>/dev/null || date +%s)
+        local processing_time=$(echo "$end_time - $start_time" | bc 2>/dev/null || echo "< 0.1")
+        
+        # Display everything at once for instant real-time effect
         clear
-        show_header
-        show_service_group "🏗️  INFRASTRUCTURE SERVICES" INFRASTRUCTURE_SERVICES
-        show_service_group "🚀 MICROSERVICES" MICROSERVICES
-        show_summary
-        show_quick_actions
+        echo -e "$header_content"
+        echo -e "$infra_content"
+        echo -e "$micro_content"
+        echo -e "$summary_content"
+        echo -e "$actions_content"
+        
+        # Show performance at bottom
+        echo -e "${GRAY}⚡ Update: ${processing_time}s | Next refresh in ${refresh_interval}s${NC}"
         
         sleep $refresh_interval
     done
@@ -296,7 +387,7 @@ show_help() {
 }
 
 # Parse command line arguments
-REFRESH_INTERVAL=3
+REFRESH_INTERVAL=1  # Default to 1 second for real-time monitoring
 
 while [[ $# -gt 0 ]]; do
     case $1 in
