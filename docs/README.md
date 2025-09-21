@@ -20,14 +20,42 @@ This project is a hands-on Kotlin microservices workspace designed for Java deve
 
 ## How to Build & Run
 
-1. Clone the repository.
-2. Each service/module has its own Gradle wrapper (`./gradlew build` or `gradlew.bat build` on Windows).
-3. Run services individually from their folders:
-   ```bash
-   cd product-service
-   ./gradlew bootRun
-   ```
-4. Configuration is managed via the `microservices-config-server` folder.
+### **Automated Setup (Recommended)**
+```bash
+# Complete environment startup
+./start.sh                         # Start everything (infrastructure + services)
+
+# Modular approach
+./start-infrastructure.sh          # Start infrastructure only
+./start.sh services                # Start microservices only
+
+# Monitoring and testing
+./monitor.sh                       # Real-time monitoring
+./test-environment.sh all          # Health checks
+```
+
+### **Manual Setup (Learning Purpose)**
+1. **Infrastructure**: Start Kafka, Vault, databases first
+2. **Configuration Server**: Provides configs to other services
+3. **Discovery Server**: Service registry (Eureka)
+4. **Business Services**: Product and Order services
+
+```bash
+# Manual service startup (learning purpose only)
+cd configuration-server && ./gradlew bootRun
+cd discover-server && ./gradlew bootRun
+cd product-service && ./gradlew bootRun
+cd order-service && ./gradlew bootRun
+```
+
+### **Development Commands**
+```bash
+./start.sh build                   # Build all services
+./start.sh clean                   # Clean environment
+./start.sh status                  # Check service health
+./start.sh logs [service-name]     # View specific logs
+./stop.sh                          # Stop everything
+```
 
 ## 🐳 Complete Docker Environment
 
