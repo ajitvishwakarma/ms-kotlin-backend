@@ -14,14 +14,10 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-      DOCKER_HOST: tcp://host.docker.internal:2375
     ports:
       - "2181:2181"
     networks:
       - ms-kotlin-microservices-network
-    # WSL-specific Docker socket mounting
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "2181"]
       interval: 10s
@@ -44,15 +40,11 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
-      DOCKER_HOST: tcp://host.docker.internal:2375
     ports:
       - "9092:9092"
       - "29092:29092"
     networks:
       - ms-kotlin-microservices-network
-    # WSL-specific Docker socket mounting
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
     healthcheck:
       test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
       interval: 15s
@@ -70,14 +62,10 @@ services:
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: ms-kotlin-kafka:29092
-      DOCKER_HOST: tcp://host.docker.internal:2375
     ports:
       - "8090:8080"
     networks:
       - ms-kotlin-microservices-network
-    # WSL-specific Docker socket mounting
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
 
   # HashiCorp Vault for secrets management
   ms-kotlin-vault:
@@ -86,14 +74,10 @@ services:
     environment:
       VAULT_DEV_ROOT_TOKEN_ID: myroot
       VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
-      DOCKER_HOST: tcp://host.docker.internal:2375
     ports:
       - "8200:8200"
     networks:
       - ms-kotlin-microservices-network
-    # WSL-specific Docker socket mounting
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
     healthcheck:
       test: ["CMD", "sh", "-c", "VAULT_ADDR=http://localhost:8200 vault status"]
       interval: 10s
@@ -106,14 +90,11 @@ services:
     container_name: ms-kotlin-mongodb
     environment:
       MONGO_INITDB_DATABASE: product-service
-      DOCKER_HOST: tcp://host.docker.internal:2375
     ports:
       - "27018:27017"
     networks:
       - ms-kotlin-microservices-network
-    # WSL-specific Docker socket mounting and data persistence
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
       - ms-kotlin-mongodb-data:/data/db
       - ./init-scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     healthcheck:
@@ -130,16 +111,11 @@ services:
       MYSQL_ROOT_PASSWORD: ""
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       MYSQL_DATABASE: order-service
-      MYSQL_USER: root
-      MYSQL_PASSWORD: ""
-      DOCKER_HOST: tcp://host.docker.internal:2375
     ports:
       - "3307:3306"
     networks:
       - ms-kotlin-microservices-network
-    # WSL-specific Docker socket mounting and data persistence
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
       - ms-kotlin-mysql-data:/var/lib/mysql
       - ./init-scripts/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql:ro
     healthcheck:
@@ -158,7 +134,6 @@ services:
     build:
       context: ./configuration-server
       dockerfile: Dockerfile
-      # Build optimizations
       cache_from:
         - gradle:8.14.3-jdk17
         - openjdk:17-jdk-alpine
@@ -175,14 +150,10 @@ services:
       - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=https://github.com/ajitvishwakarma/ms-kotlin-backend
       - SPRING_CLOUD_CONFIG_SERVER_GIT_SEARCH_PATHS=microservices-config-server
       - SPRING_CLOUD_CONFIG_SERVER_GIT_DEFAULT_LABEL=main
-      - DOCKER_HOST=tcp://host.docker.internal:2375
     ports:
       - "8888:8888"
     networks:
       - ms-kotlin-microservices-network
-    # WSL-specific Docker socket mounting
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
       interval: 30s
@@ -196,7 +167,6 @@ services:
     build:
       context: ./discover-server
       dockerfile: Dockerfile
-      # Build optimizations
       cache_from:
         - gradle:8.14.3-jdk17
         - openjdk:17-jdk-alpine
@@ -208,14 +178,10 @@ services:
         condition: service_healthy
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - DOCKER_HOST=tcp://host.docker.internal:2375
     ports:
       - "8761:8761"
     networks:
       - ms-kotlin-microservices-network
-    # WSL-specific Docker socket mounting
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
       interval: 30s
@@ -233,7 +199,6 @@ services:
     build:
       context: ./product-service
       dockerfile: Dockerfile
-      # Build optimizations
       cache_from:
         - gradle:8.14.3-jdk17
         - openjdk:17-jdk-alpine
@@ -264,14 +229,10 @@ services:
       - MONGODB_USERNAME=root
       - MONGODB_PASSWORD=""
       - MONGODB_AUTH_DB=admin
-      - DOCKER_HOST=tcp://host.docker.internal:2375
     ports:
       - "8082:8082"
     networks:
       - ms-kotlin-microservices-network
-    # WSL-specific Docker socket mounting
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
       interval: 30s
@@ -285,7 +246,6 @@ services:
     build:
       context: ./order-service
       dockerfile: Dockerfile
-      # Build optimizations
       cache_from:
         - gradle:8.14.3-jdk17
         - openjdk:17-jdk-alpine
@@ -317,14 +277,10 @@ services:
       - MYSQL_DATABASE=order-service
       - MYSQL_USERNAME=root
       - MYSQL_PASSWORD=""
-      - DOCKER_HOST=tcp://host.docker.internal:2375
     ports:
       - "8083:8083"
     networks:
       - ms-kotlin-microservices-network
-    # WSL-specific Docker socket mounting
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
       interval: 30s
