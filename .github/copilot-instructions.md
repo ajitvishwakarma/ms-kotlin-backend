@@ -19,12 +19,12 @@ This project is a **Kotlin-based microservice for interview preparation** and to
 ## Microservice Overview
 
 **Organized Structure:**
-- **infrastructure/**: All infrastructure components (Kafka, Vault, DBs) with management scripts
+- **infrastructure/**: All infrastructure components (Kafka, Vault, DBs) with automated init data
 - **core-services/**: Configuration and Discovery servers
 - **business-services/**: Product and Order services (main focus for learning)
 
 **Architecture:**
-- **Infrastructure**: Automated startup with `./infrastructure/manage-infrastructure.sh`
+- **Infrastructure**: Automated startup with `./start-infra.sh`
 - **Core Services**: Spring Cloud Config + Eureka Discovery
 - **Business Services**: REST APIs with database integration (main interview focus)
 
@@ -48,13 +48,13 @@ When adding new features (API Gateway, fallback, logging, Vault, etc.), update t
 ## Development & Testing Workflow
 
 **EFFICIENCY FIRST - Interview Prep Focus:**
-1. **Quick Start**: `./start.sh` - starts everything automatically
+1. **Quick Start**: `./start-infra.sh` + `./start-dev.sh` OR IntelliJ direct run
 2. **Focus on Business Services**: `business-services/` folder - this is where you'll spend most time
 3. **Test & Learn**: Use the running services to practice Kotlin coding patterns
 
 **Infrastructure Management:**
 - Infrastructure is automated - don't spend time on DevOps unless needed
-- Use `./infrastructure/manage-infrastructure.sh` for infrastructure only
+- Use `./start-infra.sh` for infrastructure, `./start-dev.sh` for services
 - Focus your time on Kotlin language features and business logic
 
 **Code Changes Priority:**
@@ -117,7 +117,7 @@ When adding new features (API Gateway, fallback, logging, Vault, etc.), update t
 - Document all issues and their solutions in `TROUBLESHOOTING.md`. For each issue, include the error message, root cause, and the fix. This helps future contributors quickly resolve common issues.
 
 **Kotlin/Java Q&A and Interview Notes:**
-- All Kotlin/Java interview Q&A, explanations, and comparisons must be added to `KOTLIN-JAVA-INTERVIEW-NOTES.md` in the project root.
+- All Kotlin/Java interview Q&A, explanations, and comparisons must be added to `docs/guides/KOTLIN-JAVA-INTERVIEW-NOTES.md`.
 - When a new Kotlin/Java topic is discussed, update this file with concise, interview-focused notes and code samples.
 - Use side-by-side comparisons (tables or code blocks) to highlight differences between Kotlin and Java, as seen in the current notes.
 - Whenever you have any doubts or questions related to Kotlin (language features, patterns, best practices, etc.), research and update `KOTLIN-JAVA-INTERVIEW-NOTES.md` with your findings, explanations, and code samples. This will help grow the knowledge base for all contributors.

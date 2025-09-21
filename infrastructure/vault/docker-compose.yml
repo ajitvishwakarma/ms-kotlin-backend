@@ -14,7 +14,7 @@ services:
     volumes:
       - vault-data:/vault/data
       - ./config:/vault/config
-      - ./secrets:/vault/secrets
+      - ../init-data/vault:/vault/init
     command: vault server -dev -dev-listen-address=0.0.0.0:8200
     networks:
       - ms-kotlin-microservices-network

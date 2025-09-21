@@ -1,52 +1,66 @@
-# 🚀 Kotlin Microservices - Simple Scripts
+# 🚀 Simple Script Usage Guide
 
-## **Main Scripts (Use These)**
+## **Main Scripts (Root Level)**
 
-### `./dev.sh` - Complete Development Environment
+### Infrastructure Only
 ```bash
-./dev.sh start      # Start everything (infrastructure + microservices)
+./start-infra.sh    # Start MongoDB, MySQL, Kafka, Vault
+./stop-infra.sh     # Stop all infrastructure
+```
+
+### Development Services  
+```bash
+./start-dev.sh      # Start Config + Discovery + Business Services
+./stop-dev.sh       # Stop development services only
+```
+
+### Complete Environment
+```bash
+./dev.sh start      # Everything (infrastructure + services)
 ./dev.sh stop       # Stop everything
 ./dev.sh status     # Check what's running
-./dev.sh logs       # Show all logs
-./dev.sh build      # Build microservices
-./dev.sh clean      # Clean everything
 ```
 
-### `./infra.sh` - Infrastructure Only
+## **Recommended Workflow**
+
+### For IntelliJ Development
 ```bash
-./infra.sh start    # Start databases, Kafka, Vault
-./infra.sh stop     # Stop infrastructure
-./infra.sh status   # Check infrastructure status
+# 1. Start infrastructure
+./start-infra.sh
+
+# 2. Run microservices from IntelliJ (better for debugging)
+# - Open business-services/product-service in IntelliJ
+# - Open business-services/order-service in IntelliJ
+# - Run them directly from IDE
 ```
 
-## **Quick Start for Interview Prep**
+### For Docker Development
+```bash
+# Start everything in Docker
+./start-infra.sh
+./start-dev.sh
 
-1. **Start Everything**: `./dev.sh start`
-2. **Check Status**: `./dev.sh status`
-3. **Focus on Business Services**: Open `business-services/` in your IDE
-4. **Practice Kotlin**: Modify product-service and order-service
+# Or simply
+./dev.sh start
+```
 
-## **What's Running**
+## **Services & Ports**
 
 | Service | Port | Purpose |
 |---------|------|---------|
-| Product Service | 8082 | Business logic (MongoDB) |
-| Order Service | 8083 | Business logic (MySQL) |
-| Config Server | 8888 | Configuration management |
-| Discovery Server | 8761 | Service registry |
+| MongoDB | 27018 | Product data |
+| MySQL | 3307 | Order data |
 | Kafka UI | 8090 | Message monitoring |
-| Vault | 8200 | Secrets management |
+| Vault | 8200 | Secrets (token: myroot) |
+| Config Server | 8888 | Configuration |
+| Discovery | 8761 | Service registry |
+| Product Service | 8082 | Business logic |
+| Order Service | 8083 | Business logic |
 
-## **File Organization**
+## **Interview Focus**
 
-```
-📦 Root
-├── dev.sh              → Main development script
-├── infra.sh            → Infrastructure management
-├── business-services/  → Your main focus (Kotlin code)
-├── core-services/      → Config & Discovery
-├── infrastructure/     → Docker configs only
-└── scripts/legacy/     → Old scripts (ignore)
-```
+**Main Development**: Focus on `business-services/` folder
+- `product-service/` - Kotlin + MongoDB patterns
+- `order-service/` - Kotlin + MySQL patterns
 
-**Focus on `business-services/` for Kotlin learning and interview prep!** 🎯
+**Infrastructure**: Automated via scripts, don't spend time on DevOps unless needed!

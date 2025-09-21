@@ -1,23 +1,45 @@
-# 🚀 Kotlin-Java Microservices Environment
+# 🚀 Kotlin Microservices - Interview Preparation Environment
 
-## 📁 **Project Organization**
+## ⚡ **Quick Start**
+
+```bash
+# Start infrastructure (databases, Kafka, Vault)
+./start-infra.sh
+
+# Start microservices (Config, Discovery, Business Services)  
+./start-dev.sh
+
+# Or start everything together
+./dev.sh start
+```
+
+## 📁 **Project Structure**
 
 ```
 📦 ms-kotlin-backend/
-├── 🚀 Core Automation
-│   ├── start.sh                    → Main environment control
-│   ├── start-infrastructure.sh     → Infrastructure startup
-│   ├── stop.sh                     → Stop environment
-│   ├── monitor.sh                  → Real-time monitoring
-│   ├── test-environment.sh         → Health checking
-│   └── docker-compose.yml          → Container orchestration
+├── 🚀 **Scripts** (Interview Focus)
+│   ├── start-infra.sh              → Infrastructure only
+│   ├── start-dev.sh                → Development services
+│   ├── stop-infra.sh               → Stop infrastructure  
+│   ├── stop-dev.sh                 → Stop development
+│   └── dev.sh                      → Complete environment
 │
-├── 🏗️ Microservices
-│   ├── configuration-server/       → Spring Cloud Config
-│   ├── discover-server/            → Eureka Discovery
-│   ├── product-service/            → Product management
-│   └── order-service/              → Order management
+├── 🏗️ **Core Services**
+│   ├── core-services/              
+│   │   ├── configuration-server/   → Spring Cloud Config
+│   │   └── discovery-server/       → Eureka Service Discovery
+│   └── business-services/          → **MAIN FOCUS FOR INTERVIEWS**
+│       ├── product-service/        → Kotlin + MongoDB  
+│       └── order-service/          → Kotlin + MySQL
 │
+├── 🛠️ **Infrastructure** 
+│   ├── databases/                  → MongoDB + MySQL
+│   ├── kafka/                      → Messaging + UI
+│   ├── vault/                      → Secrets management
+│   └── init-data/                  → Sample data for all services
+│
+└── 📚 **Documentation**
+    └── docs/                       → Interview guides & architecture
 ├── � Infrastructure
 │   ├── vault-docker/               → HashiCorp Vault (secrets)
 │   ├── kafka-docker/               → Kafka messaging
