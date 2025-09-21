@@ -10,7 +10,7 @@ services:
       - "27018:27017"
     volumes:
       - mongodb-data:/data/db
-      - ../../init-data/mongodb/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     networks:
       - ms-kotlin-microservices-network
     healthcheck:
@@ -30,7 +30,7 @@ services:
       - "3307:3306"
     volumes:
       - mysql-data:/var/lib/mysql
-      - ../../init-data/mysql/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql:ro
+      - ./mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql:ro
     networks:
       - ms-kotlin-microservices-network
     healthcheck:

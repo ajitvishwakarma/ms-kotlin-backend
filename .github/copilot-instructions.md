@@ -15,18 +15,27 @@ This project is a **Kotlin-based microservice for interview preparation** and to
 - **Speed over perfection**: Focus on learning and quick iteration
 - **Interview-relevant only**: Skip complex infrastructure unless directly needed
 - **Time-conscious**: User has limited time for interview prep
+- **Use parallelism**: Execute independent tasks in parallel to save time and resources
+- **Batch operations**: Group related file operations and commands for efficiency
 
 ## Microservice Overview
 
 **Organized Structure:**
-- **infrastructure/**: All infrastructure components (Kafka, Vault, DBs) with automated init data
+- **Root Level Scripts**: Main workflow scripts (`start-infra.sh`, `start-dev.sh`, `monitor.sh`, `status-check.sh`)
+- **script-utils/**: Build optimization utilities only
+- **infrastructure/**: All infrastructure components with co-located init scripts
+  - **databases/**: MongoDB + MySQL with init scripts in same folder
+  - **vault/**: Secrets management with JSON configs in `secrets/` subfolder
+  - **kafka/**: Messaging + UI components
 - **core-services/**: Configuration and Discovery servers
 - **business-services/**: Product and Order services (main focus for learning)
 
 **Architecture:**
-- **Infrastructure**: Automated startup with `./start-infra.sh`
+- **Infrastructure**: Automated startup with `./start-infra.sh`, co-located init scripts
 - **Core Services**: Spring Cloud Config + Eureka Discovery
 - **Business Services**: REST APIs with database integration (main interview focus)
+- **Monitoring**: Real-time with `./monitor.sh`, quick check with `./status-check.sh`
+- **Secrets**: Dynamic loading from JSON files in `infrastructure/vault/secrets/`
 
 ## Planned/Upcoming Features
 
@@ -45,17 +54,72 @@ When adding new features (API Gateway, fallback, logging, Vault, etc.), update t
 
 ---
 
+## ⚡ **PARALLELISM & EFFICIENCY GUIDELINES**
+
+**ALWAYS optimize for speed and resource efficiency in all operations:**
+
+### **Terminal Commands & File Operations**
+- **Use command chaining**: `cmd1 && cmd2 && cmd3` for sequential dependencies
+- **Parallel execution**: Use `&` for independent background tasks when safe
+- **Batch file operations**: Group related `mv`, `cp`, `rm` commands with `&&`
+- **Example**: `mv file1.sh . && mv file2.sh . && echo "Files moved"` instead of separate commands
+
+### **Docker & Infrastructure**
+- **Parallel service checks**: Check multiple containers simultaneously
+- **Efficient volume mounts**: Update multiple compose files in batch
+- **Resource optimization**: Use shared volumes and networks when possible
+
+### **Documentation Updates**
+- **Batch README updates**: Plan all documentation changes before execution
+- **Parallel file reads**: Read multiple files when analyzing structure
+- **Efficient search**: Use `grep_search` with regex alternation instead of multiple searches
+
+### **Code Analysis & Updates**
+- **Multi-file analysis**: Read related files in parallel when possible
+- **Batch replacements**: Group related string replacements
+- **Semantic search optimization**: Use broader queries to reduce tool calls
+
+### **Project Organization**
+- **Bulk moves**: Move multiple related files in single commands
+- **Path updates**: Update all references to moved files in one pass
+- **Directory cleanup**: Remove empty directories after bulk moves
+
+### **Git Operations**
+- **Logical grouping**: Commit related changes together
+- **Parallel branch operations**: Handle multiple aspects simultaneously
+- **Efficient status checks**: Batch git status and diff operations
+
+**CRITICAL RULE**: Before any multi-step operation, plan for maximum parallelism and minimal tool calls.
+
+---
+
 ## Development & Testing Workflow
 
 **EFFICIENCY FIRST - Interview Prep Focus:**
 1. **Quick Start**: `./start-infra.sh` + `./start-dev.sh` OR IntelliJ direct run
 2. **Focus on Business Services**: `business-services/` folder - this is where you'll spend most time
 3. **Test & Learn**: Use the running services to practice Kotlin coding patterns
+4. **Monitor & Debug**: Use `./monitor.sh` for continuous health monitoring
+
+**Typical Workflow:**
+```bash
+# 1. Start infrastructure
+./start-infra.sh
+
+# 2. Start monitoring in background (optional)
+./monitor.sh &
+
+# 3. Start development services
+./start-dev.sh
+
+# 4. Develop with real-time health visibility
+```
 
 **Infrastructure Management:**
 - Infrastructure is automated - don't spend time on DevOps unless needed
 - Use `./start-infra.sh` for infrastructure, `./start-dev.sh` for services
 - Focus your time on Kotlin language features and business logic
+- **Monitoring**: Use `./monitor.sh` for real-time health checks, `./status-check.sh` for quick status
 
 **Code Changes Priority:**
 1. **Business Services**: product-service, order-service (main learning focus)
@@ -67,6 +131,7 @@ When adding new features (API Gateway, fallback, logging, Vault, etc.), update t
 - Infrastructure is ready - focus on business logic
 - Skip complex DevOps unless directly asked
 - Prioritize Kotlin learning over infrastructure tweaks
+- **Use efficiency patterns**: Always batch operations and use parallelism when possible
 
 ---
 
@@ -116,6 +181,11 @@ When adding new features (API Gateway, fallback, logging, Vault, etc.), update t
 **Troubleshooting:**
 - Document all issues and their solutions in `TROUBLESHOOTING.md`. For each issue, include the error message, root cause, and the fix. This helps future contributors quickly resolve common issues.
 
+**Script Organization:**
+- Main workflow scripts remain at root level: `start-infra.sh`, `start-dev.sh`, `monitor.sh`, `status-check.sh`
+- Utility scripts for optimization in `script-utils/`: `optimize-builds.sh`, `optimize-docker-builds.sh`
+- Infrastructure components have co-located init scripts for efficiency
+
 **Kotlin/Java Q&A and Interview Notes:**
 - All Kotlin/Java interview Q&A, explanations, and comparisons must be added to `docs/guides/KOTLIN-JAVA-INTERVIEW-NOTES.md`.
 - When a new Kotlin/Java topic is discussed, update this file with concise, interview-focused notes and code samples.
@@ -145,7 +215,7 @@ When adding new features (API Gateway, fallback, logging, Vault, etc.), update t
 
 ## Motivation
 
-The project is meant to help a Java developer quickly revise Kotlin, understand differences, and prepare for interviews with practical, side-by-side examples.
+The project is meant to help a Java developer quickly revise Kotlin, understand differences, and prepare for interviews with practical, side-by-side examples. **Efficiency and time optimization are key priorities** - use parallelism, batch operations, and co-located resources to minimize setup time and maximize learning focus.
 
 ---
 
