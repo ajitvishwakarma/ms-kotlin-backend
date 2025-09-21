@@ -180,12 +180,12 @@ main() {
     echo "🎉 Environment stopped successfully!"
     echo ""
     echo "💡 To start again:"
-    echo "   ./start-environment.sh"
+    echo "   ./start.sh"
     echo ""
     echo "💡 Other options:"
-    echo "   ./start-environment.sh status  - Check current status"
-    echo "   ./stop-environment.sh clean   - Deep clean everything"
-    echo "   ./stop-environment.sh backup  - Backup data before stopping"
+    echo "   ./start.sh status  - Check current status"
+    echo "   ./stop.sh clean   - Deep clean everything"
+    echo "   ./stop.sh backup  - Backup data before stopping"
 }
 
 # Handle script arguments

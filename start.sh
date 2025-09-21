@@ -5,7 +5,19 @@ echo "=============================================="
 
 # Function to check if Docker is running
 check_docker() {
-    if ! docker info > /dev/null 2>&1; then
+    if ! docker info > /dev/null 2>    echo "   Check health:      curl http://localhost:808{2,3}/actuator/health"
+    echo ""
+    echo "🏗️  Modular startup:"
+    echo "   Infrastructure:    ./start-infrastructure.sh"
+    echo "   Services only:     ./start.sh services"
+    echo "   Complete stack:    ./start.sh"
+    echo ""
+    echo "🛠️  Helper scripts:"
+    echo "   Monitor services:  ./monitor.sh"
+    echo "   Test endpoints:    ./test-environment.sh"
+    echo "   View service logs: ./monitor.sh logs [service-name]"
+    echo ""
+    echo "📚 For Spring Cloud Bus testing:"
         echo "❌ Docker is not running. Please start Docker and try again."
         exit 1
     fi
@@ -35,11 +47,7 @@ cleanup_existing() {
 check_optimizations() {
     if [ ! -f "gradle.properties" ] || ! grep -q "org.gradle.daemon=true" gradle.properties 2>/dev/null; then
         echo "⚡ Applying build optimizations for faster builds..."
-        if [ -f "optimize-builds.sh" ]; then
-            chmod +x optimize-builds.sh
-            ./optimize-builds.sh optimize > /dev/null 2>&1
-            echo "✅ Build optimizations applied"
-        fi
+        echo "✅ Build optimizations already configured in gradle.properties"
     fi
 }
 
@@ -73,30 +81,22 @@ build_services() {
         echo "✅ All services built successfully"
     else
         echo "❌ Build failed. Check the error messages above."
-        echo "💡 Try: ./optimize-builds.sh clean-cache && ./start-environment.sh build"
+        echo "💡 Try: ./start.sh clean && ./start.sh build"
         exit 1
     fi
 }
 
 # Function to start infrastructure services
 start_infrastructure() {
-    echo "🔧 Starting infrastructure services (Kafka, Vault, Databases, etc.)..."
-    docker-compose up -d \
-        ms-kotlin-zookeeper \
-        ms-kotlin-kafka \
-        ms-kotlin-kafka-ui \
-        ms-kotlin-vault \
-        ms-kotlin-mongodb \
-        ms-kotlin-mysql
-
-    echo "⏳ Waiting for infrastructure to be healthy..."
-    wait_for_health "ms-kotlin-zookeeper" 60
-    wait_for_health "ms-kotlin-kafka" 90
-    wait_for_health "ms-kotlin-vault" 30
-    wait_for_health "ms-kotlin-mongodb" 30
-    wait_for_health "ms-kotlin-mysql" 30
+    echo "🔧 Starting infrastructure services..."
+    ./start-infrastructure.sh start
     
-    echo "✅ All infrastructure services are healthy"
+    if [ $? -ne 0 ]; then
+        echo "❌ Infrastructure startup failed"
+        exit 1
+    fi
+    
+    echo "✅ Infrastructure services ready"
 }
 
 # Function to start core services
@@ -139,13 +139,14 @@ wait_for_health() {
     echo -n "   Waiting for $service_name..."
     
     while [ $count -lt $timeout ]; do
-        if docker-compose ps --format json | jq -r ".[] | select(.Name==\"$service_name\") | .Health" | grep -q "healthy"; then
+        # Check if container is healthy using docker inspect
+        if docker inspect --format='{{.State.Health.Status}}' "$service_name" 2>/dev/null | grep -q "healthy"; then
             echo " ✅ Healthy"
             return 0
         fi
         
         # Check if container is running at least
-        if ! docker-compose ps --format json | jq -r ".[] | select(.Name==\"$service_name\") | .State" | grep -q "running"; then
+        if ! docker inspect --format='{{.State.Status}}' "$service_name" 2>/dev/null | grep -q "running"; then
             echo " ❌ Container stopped"
             docker-compose logs --tail=20 "$service_name"
             return 1
@@ -219,12 +220,17 @@ show_status() {
 show_commands() {
     echo "💡 Useful commands:"
     echo "   View logs:         docker-compose logs -f [service-name]"
-    echo "   Stop all:          ./stop-environment.sh"
+    echo "   Stop all:          ./stop.sh"
     echo "   Restart service:   docker-compose restart [service-name]"
     echo "   Rebuild service:   docker-compose up -d --build [service-name]"
     echo "   Check health:      curl http://localhost:808{2,3}/actuator/health"
     echo ""
-    echo "📚 For Spring Cloud Bus testing:"
+    echo "�️  Helper scripts:"
+    echo "   Monitor services:  ./monitor.sh"
+    echo "   Test endpoints:    ./test-environment.sh"
+    echo "   View service logs: ./monitor.sh logs [service-name]"
+    echo ""
+    echo "�📚 For Spring Cloud Bus testing:"
     echo "   1. Test config:    curl http://localhost:8082/api/test"
     echo "   2. Change property in microservices-config-server/"
     echo "   3. Refresh all:    curl -X POST http://localhost:8082/actuator/busrefresh"
@@ -247,7 +253,23 @@ main() {
     
     echo "🎉 Environment started successfully!"
     echo ""
-    echo "🚨 To stop the environment: ./stop-environment.sh"
+    echo "🚨 To stop the environment: ./stop.sh"
+}
+
+# Function to start only microservices (assumes infrastructure is running)
+start_services_only() {
+    check_docker
+    check_git_status
+    build_services
+    start_core_services
+    start_business_services
+    verify_endpoints
+    show_status
+    show_commands
+    
+    echo "🎉 Microservices started successfully!"
+    echo ""
+    echo "🚨 To stop the environment: ./stop.sh"
 }
 
 # Handle script arguments
@@ -255,13 +277,21 @@ case "${1:-start}" in
     "start")
         main
         ;;
+    "infrastructure")
+        echo "🔧 Starting infrastructure only..."
+        ./start-infrastructure.sh start
+        ;;
+    "services")
+        echo "🏪 Starting microservices only (infrastructure must be running)..."
+        start_services_only
+        ;;
     "stop")
         echo "🛑 Stopping all services..."
-        ./stop-environment.sh
+        ./stop.sh
         ;;
     "restart")
         echo "🔄 Restarting environment..."
-        ./stop-environment.sh
+        ./stop.sh
         main
         ;;
     "status")
@@ -284,15 +314,17 @@ case "${1:-start}" in
         docker system prune -f
         ;;
     *)
-        echo "Usage: $0 {start|stop|restart|status|logs [service]|build|clean}"
+        echo "Usage: $0 {start|infrastructure|services|stop|restart|status|logs [service]|build|clean}"
         echo ""
-        echo "  start    - Start all services (default)"
-        echo "  stop     - Stop all services"
-        echo "  restart  - Restart all services"
-        echo "  status   - Show service status and verify endpoints"
-        echo "  logs     - Show logs for all services or specific service"
-        echo "  build    - Build all services only"
-        echo "  clean    - Clean up containers and system"
+        echo "  start         - Start complete environment (default)"
+        echo "  infrastructure- Start only infrastructure (Kafka, Vault, DBs)"
+        echo "  services      - Start only microservices (needs infrastructure)"
+        echo "  stop          - Stop all services"
+        echo "  restart       - Restart all services"
+        echo "  status        - Show service status and verify endpoints"
+        echo "  logs          - Show logs for all services or specific service"
+        echo "  build         - Build all services only"
+        echo "  clean         - Clean up containers and system"
         exit 1
         ;;
 esac
