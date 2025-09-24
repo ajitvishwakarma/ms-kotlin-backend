@@ -161,20 +161,27 @@ When adding new features (API Gateway, fallback, logging, Vault, etc.), update t
 - Group by: features, fixes, documentation, dependencies, configuration, etc.
 
 **When Asked to Commit:**
-- Automatically group and commit changes logically without asking
-- Use meaningful commit messages with proper prefixes: `feat:`, `fix:`, `docs:`, `refactor:`, etc.
-- Include detailed descriptions for complex changes
-- Reference related issues or architectural decisions when relevant
+- Group changes logically by purpose
+- Use conventional prefixes: `feat:`, `fix:`, `docs:`, `refactor:`
+- **KEEP COMMITS CONCISE** - detailed logs go in PROJECT-LOG.md
+- Max 5-8 bullet points, focus on key changes only
 
-**Commit Message Format:**
+**Commit Message Format (KEEP CONCISE):**
 ```
 <type>: <subject>
 
-<optional body with detailed explanation>
-- Bullet points for multiple changes
-- Technical details and reasoning
-- Impact on other components
+BRIEF body (max 5-8 bullet points):
+- Key change 1
+- Key change 2  
+- Key change 3
+- Result/impact
 ```
+
+**COMMIT RULES:**
+- **Short subject line** (50 chars max)
+- **Max 5-8 bullet points** in body
+- **No excessive detail** - save for PROJECT-LOG.md
+- **Focus on WHAT changed**, not HOW
 
 **Common Groupings:**
 1. **Dependencies**: `build.gradle`, `pom.xml` changes
