@@ -1,88 +1,67 @@
-# 🚀 Kotlin Microservices - Interview Preparation Environment# 🚀 Kotlin Microservices - Interview Preparation Environment# 🚀 Kot# Start development services (Config, Discovery, Business Services)  
+# 🚀## 📋 **Essential Documentation**
+- **🚀 [QUICK-START.md](QUICK-START.md)** - Get up and running in 30 seconds
+- **📋 [PROJECT-LOG.md](PROJECT-LOG.md)** - Complete project status, what's done, what's next
+- **🎯 [KOTLIN-JAVA-INTERVIEW-NOTES.md](KOTLIN-JAVA-INTERVIEW-NOTES.md)** - Learning materials
+- **🔧 [TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Common issues and solutionsin Microservices - Interview Preparation Environment
 
+**Purpose**: Kotlin-based microservices for interview preparation and Java-to-Kotlin transition learning.
 
+## � **Documentation Quick Links**
+- **🚀 [QUICK-START.md](QUICK-START.md)** - Get up and running in 30 seconds
+- **📋 [PROJECT-LOG.md](PROJECT-LOG.md)** - Complete project status, what's done, what's next
+- **🎯 [Kotlin Interview Notes](docs/guides/KOTLIN-JAVA-INTERVIEW-NOTES.md)** - Learning materials
+- **🔧 [Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
 
-## ⚡ **Quick Start**./start-dev.sh
+## ⚡ **Quick Start**
 
-
-
-```bash## ⚡ **Quick Start**```croservices - Interview Preparation Environment
-
-# Start infrastructure (databases, Kafka, Vault)
-
+```bash
+# Start infrastructure (databases, Kafka, Vault with auto-secrets)
 ./start-infra.sh
 
-
-
-# Start microservices (Config, Discovery, Business Services)  ```bash## ⚡ **Quick Start**
-
+# Start microservices (Config, Discovery, Business Services)
 ./start-dev.sh
 
-```# Start infrastructure (databases, Kafka, Vault)
+# Check everything is running
+./status-check.sh
+```
 
-
-
-## 📁 **Project Structure**./start-infra.sh```bash
-
-
-
-```# Start infrastructure (databases, Kafka, Vault)
+## 📁 **Project Structure**
 
 📦 ms-kotlin-backend/
 
 ├── 🚀 **Main Scripts** (Interview Focus)# Start microservices (Config, Discovery, Business Services)  ./start-infra.sh
 
+```
+📦 ms-kotlin-backend/
+├── 🚀 **Main Scripts** (Interview Focus)
 │   ├── start-infra.sh              → Infrastructure only
-
-│   ├── start-dev.sh                → Development services./start-dev.sh
-
+│   ├── start-dev.sh                → Development services
 │   ├── stop-infra.sh               → Stop infrastructure  
-
-│   ├── stop-dev.sh                 → Stop development```# Start microservices (Config, Discovery, Business Services)  
-
+│   ├── stop-dev.sh                 → Stop development
 │   ├── monitor.sh                  → Real-time health monitoring
-
-│   └── status-check.sh             → One-time status check./start-dev.sh
-
+│   └── status-check.sh             → One-time status check
 │
-
-├── 🛠️ **Utility Scripts**## 📁 **Project Structure**
-
+├── 🛠️ **Utility Scripts**
 │   └── script-utils/               → Build optimization tools
-
-│       ├── optimize-builds.sh      → Gradle optimizations# Or start everything together
-
+│       ├── optimize-builds.sh      → Gradle optimizations
 │       └── optimize-docker-builds.sh → Docker build caching
-
-│```./dev.sh start
-
+│
 ├── 🏗️ **Core Services**
-
-│   ├── core-services/              📦 ms-kotlin-backend/```
-
-│   │   ├── configuration-server/   → Spring Cloud Config
-
-│   │   └── discovery-server/       → Eureka Service Discovery├── 🚀 **Main Scripts** (Interview Focus)
-
-│   └── business-services/          → **MAIN FOCUS FOR INTERVIEWS**
-
-│       ├── product-service/        → Kotlin + MongoDB  │   ├── start-infra.sh              → Infrastructure only## 📁 **Project Structure**
-
-│       └── order-service/          → Kotlin + MySQL
-
-││   ├── start-dev.sh                → Development services
-
-├── 🛠️ **Infrastructure** 
-
-│   ├── databases/                  → MongoDB + MySQL + init scripts│   ├── stop-infra.sh               → Stop infrastructure  ```
-
-│   ├── kafka/                      → Messaging + UI
-
-│   └── vault/                      → Secrets management + JSON configs│   └── stop-dev.sh                 → Stop development📦 ms-kotlin-backend/
-
-│       └── secrets/                → Secret configuration files
-
-││├── 🚀 **Main Scripts** (Interview Focus)
+│   └── core-services/              
+│       ├── configuration-server/   → Spring Cloud Config
+│       └── discover-server/        → Eureka Service Discovery
+│
+├── 🏢 **Business Services**        → **MAIN FOCUS FOR INTERVIEWS**
+│   └── business-services/          
+│       ├── product-service/        → Kotlin + MongoDB  
+│       ├── order-service/          → Kotlin + MySQL
+│       └── microservices-config-server/ → Config properties
+│
+└── 🏗️ **Infrastructure** 
+    ├── databases/                  → MongoDB + MySQL + init scripts
+    ├── kafka/                      → Messaging + UI
+    └── vault/                      → Secrets management + JSON configs
+        └── secrets/                → Secret configuration files
 
 └── 📚 **Documentation**
 
