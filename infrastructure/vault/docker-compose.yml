@@ -16,7 +16,8 @@ services:
       - ./config:/vault/config
       - ./secrets:/vault/secrets:ro
       - ./load-secrets.sh:/vault/config/load-secrets.sh:ro
-    command: vault server -dev -dev-listen-address=0.0.0.0:8200
+      - ./vault-entrypoint.sh:/vault/config/vault-entrypoint.sh:ro
+    command: ["sh", "/vault/config/vault-entrypoint.sh"]
     networks:
       - ms-kotlin-microservices-network
     healthcheck:

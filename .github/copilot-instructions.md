@@ -17,6 +17,7 @@ This project is a **Kotlin-based microservice for interview preparation** and to
 - **Time-conscious**: User has limited time for interview prep
 - **Use parallelism**: Execute independent tasks in parallel to save time and resources
 - **Batch operations**: Group related file operations and commands for efficiency
+- **ALWAYS ASK BEFORE IMPLEMENTING**: When multiple solutions exist, present options and wait for user choice - NEVER implement without confirmation
 
 ## Microservice Overview
 
@@ -132,6 +133,18 @@ When adding new features (API Gateway, fallback, logging, Vault, etc.), update t
 - Skip complex DevOps unless directly asked
 - Prioritize Kotlin learning over infrastructure tweaks
 - **Use efficiency patterns**: Always batch operations and use parallelism when possible
+
+**INFRASTRUCTURE MANAGEMENT PROTOCOL:**
+- **ALWAYS use predefined scripts**: `./start-infra.sh`, `./stop-infra.sh`, `./start-dev.sh`, `./stop-dev.sh`, `./monitor.sh`, `./status-check.sh`
+- **NO manual Docker commands**: Use the provided scripts unless explicitly asked to do manual operations
+- **Infrastructure is automated**: Scripts handle container orchestration, networking, secrets loading
+- **Focus on business services**: Spend time on `business-services/` folder, not infrastructure tweaks
+
+**DECISION MAKING PROTOCOL:**
+- **Present Options First**: When multiple solutions exist, explain each option with pros/cons
+- **Wait for User Choice**: NEVER implement multiple approaches without explicit user selection
+- **Confirm Before Action**: Always ask "Which option would you prefer?" or "Should I proceed with this approach?"
+- **Respect User Time**: Present concise options but let user decide the direction
 
 ---
 
