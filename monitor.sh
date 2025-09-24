@@ -1,9 +1,9 @@
 #!/bin/bash
 # =============================================================================
-# ��� ULTRA-FAST Kotlin Microservices Monitor - Optimized & Compact
+# 🔍 ULTRA-FAST Kotlin Microservices Monitor - Optimized & Compact
 # =============================================================================
 
-set -e
+# Note: Using set +e for better error handling in monitoring context
 
 # Colors
 RED='\033[0;31m' GREEN='\033[0;32m' YELLOW='\033[1;33m' BLUE='\033[0;34m'
@@ -45,7 +45,7 @@ get_service_status() {
         "running:healthy"|"running:no-healthcheck") echo -e "${GREEN}✅ HEALTHY${NC}" ;;
         "running:starting") echo -e "${YELLOW}⏳ STARTING${NC}" ;;
         "running:unhealthy") echo -e "${RED}⚠️  UNHEALTHY${NC}" ;;
-        "restarting:"*) echo -e "${YELLOW}��� RESTARTING${NC}" ;;
+        "restarting:"*) echo -e "${YELLOW}��� RESTARTING${NC}" ;;
         "exited:"*|"NOT_RUNNING:"*) echo -e "${GRAY}⚫ STOPPED${NC}" ;;
         *) echo -e "${PURPLE}❓ UNKNOWN${NC}" ;;
     esac
@@ -111,25 +111,25 @@ show_dashboard() {
     
     # Summary status
     if [ $healthy -eq $total ]; then
-        summary="${GREEN}��� All services healthy${NC}"
+        summary="${GREEN}��� All services healthy${NC}"
     elif [ $((healthy + starting)) -gt 0 ]; then
         summary="${YELLOW}⏳ Services starting up${NC}"
     else
-        summary="${RED}��� No services running${NC}"
+        summary="${RED}��� No services running${NC}"
     fi
     
     # Ultra-compact display (single output)
     clear
     echo -e "${WHITE}╔════════════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${WHITE}║${NC} ${CYAN}��� Kotlin Microservices Monitor${NC} ${WHITE}║${NC} ${GRAY}$timestamp${NC} ${WHITE}║${NC}"
+    echo -e "${WHITE}║${NC} ${CYAN}��� Kotlin Microservices Monitor${NC} ${WHITE}║${NC} ${GRAY}$timestamp${NC} ${WHITE}║${NC}"
     echo -e "${WHITE}╠════════════════════════════════════════════════════════════════════╣${NC}"
-    echo -e "${WHITE}║${NC} ${WHITE}���️  INFRASTRUCTURE${NC}                                            ${WHITE}║${NC}"
+    echo -e "${WHITE}║${NC} ${WHITE}���️  INFRASTRUCTURE${NC}                                            ${WHITE}║${NC}"
     echo -e "$infra_output"
     echo -e "${WHITE}╠────────────────────────────────────────────────────────────────────╢${NC}"
-    echo -e "${WHITE}║${NC} ${WHITE}��� MICROSERVICES${NC}                                               ${WHITE}║${NC}"
+    echo -e "${WHITE}║${NC} ${WHITE}��� MICROSERVICES${NC}                                               ${WHITE}║${NC}"
     echo -e "$micro_output"
     echo -e "${WHITE}╠════════════════════════════════════════════════════════════════════╣${NC}"
-    echo -e "${WHITE}║${NC} ${GREEN}✅ ${healthy}${NC} ${YELLOW}⏳ ${starting}${NC} ${RED}❌ ${stopped}${NC} ${BLUE}��� ${total}${NC} │ $summary                  ${WHITE}║${NC}"
+    echo -e "${WHITE}║${NC} ${GREEN}✅ ${healthy}${NC} ${YELLOW}⏳ ${starting}${NC} ${RED}❌ ${stopped}${NC} ${BLUE}��� ${total}${NC} │ $summary                  ${WHITE}║${NC}"
     echo -e "${WHITE}╚════════════════════════════════════════════════════════════════════╝${NC}"
     echo -e "${GRAY}⚡ Ultra-fast refresh │ ${CYAN}Ctrl+C${NC}${GRAY} to exit │ ${CYAN}./start-infra.sh${NC} ${CYAN}./start-dev.sh${NC}${GRAY} to launch${NC}"
 }
@@ -137,16 +137,18 @@ show_dashboard() {
 # Main monitor loop (optimized)
 monitor_loop() {
     local interval=${1:-0.3}  # Even faster default
-    echo -e "${CYAN}��� Starting ultra-fast monitor (${interval}s refresh)...${NC}"
+    echo -e "${CYAN}��� Starting ultra-fast monitor (${interval}s refresh)...${NC}"
     
     # Hide cursor for cleaner display
     tput civis 2>/dev/null || true
     trap 'tput cnorm 2>/dev/null || true; exit' INT TERM EXIT
     
     while true; do
-        local start=$(date +%s.%N 2>/dev/null || date +%s)
+        local start=$(date +%s 2>/dev/null)
         show_dashboard
-        local duration=$(echo "$(date +%s.%N 2>/dev/null || date +%s) - $start" | bc 2>/dev/null || echo "< 0.1")
+        local end=$(date +%s 2>/dev/null)
+        local duration=$((end - start))
+        [ $duration -eq 0 ] && duration="< 1"
         echo -e "${GRAY}Update time: ${duration}s${NC}"
         sleep $interval
     done
@@ -154,7 +156,7 @@ monitor_loop() {
 
 # Help function (simplified)
 show_help() {
-    echo -e "${CYAN}��� Ultra-Fast Kotlin Microservices Monitor${NC}"
+    echo -e "${CYAN}��� Ultra-Fast Kotlin Microservices Monitor${NC}"
     echo
     echo "Usage: $0 [INTERVAL]"
     echo
@@ -172,7 +174,8 @@ case "${1:-}" in
     -h|--help) show_help; exit 0 ;;
     "") monitor_loop 0.3 ;;
     *) 
-        if [[ "$1" =~ ^[0-9]+\.?[0-9]*$ ]] && (( $(echo "$1 > 0" | bc -l 2>/dev/null || echo "1") )); then
+        # Simple validation without bc dependency
+        if [[ "$1" =~ ^[0-9]+\.?[0-9]*$ ]] && [ "${1%.*}" -ge 0 ] 2>/dev/null; then
             monitor_loop "$1"
         else
             echo "Error: Invalid interval '$1'. Use a positive number (e.g., 0.3, 1, 2)"
